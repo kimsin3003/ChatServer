@@ -34,12 +34,12 @@ namespace DemoClient
 
         public static byte[] StringToBytes(string data)
         {
-            return Encoding.Unicode.GetBytes(data.ToCharArray());
+            return Encoding.UTF8.GetBytes(data.ToCharArray());
         }
 
         public static string BytesToString(byte[] data)
         {
-            return Encoding.Unicode.GetString(data);
+            return Encoding.UTF8.GetString(data);
         }
     }
 }
