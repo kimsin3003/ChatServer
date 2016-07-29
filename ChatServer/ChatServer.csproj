@@ -43,8 +43,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Protocol\Header.cs" />
+    <Compile Include="SessionProcessor\CFSessionProcessor.cs" />
+    <Compile Include="SessionProcessor\FBSessionProcessor.cs" />
+    <Compile Include="SessionProcessor\SessionProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="protocol.cs" />
+    <Compile Include="Protocol\CFProtocol\CFHeader.cs" />
+    <Compile Include="Protocol\CFProtocol\CFRoomRequestBody.cs" />
+    <Compile Include="Protocol\CFProtocol\CFRoomResponseBody.cs" />
+    <Compile Include="Protocol\CFProtocol\CFChatBody.cs" />
+    <Compile Include="Protocol\FBProtocol\FBChatRequestBody.cs" />
+    <Compile Include="Protocol\FBProtocol\FBHeader.cs" />
+    <Compile Include="Protocol\FBProtocol\FBLoginRequestBody.cs" />
+    <Compile Include="Protocol\FBProtocol\FBLoginResponseBody.cs" />
+    <Compile Include="Protocol\FBProtocol\FBRoomRequestBody.cs" />
+    <Compile Include="Protocol\FBProtocol\FBRoomResponseBody.cs" />
+    <Compile Include="Protocol\CFProtocol\CFLoginRequestBody.cs" />
+    <Compile Include="Protocol\CFProtocol\CFLoginResponseBody.cs" />
+    <Compile Include="RoomManager.cs" />
     <Compile Include="Serializer.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="ServerMain.cs" />
@@ -54,6 +70,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

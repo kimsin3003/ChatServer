@@ -14,13 +14,56 @@ namespace ChatServer
         private int maxClientNum;
         private SessionManager sessionManager;
         private Thread acceptingThread;
+        
+        private string backEndIp;
+        private int backEndPort;
+        private Socket backEndSock;
 
-        public Server(int port)
+        public Server(int port, string backEndIp, int backEndPort)
         {
             ipEndPoint = new IPEndPoint(IPAddress.Any, port);
             listenSock = null;
+            backEndSock = null;
             maxClientNum = 10;
             sessionManager = new SessionManager();
+
+            this.backEndIp = backEndIp;
+            this.backEndPort = backEndPort;
+        }
+
+        public void ConnectToBackEnd()
+        {
+            IPHostEntry ipHost = Dns.GetHostEntry(backEndIp);
+            IPAddress ipAddr = ipHost.AddressList[1];     //In index 0, there's ipv6 address.
+            
+            backEndSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            while(true)
+            {
+                try
+                {
+                    backEndSock.Connect(new IPEndPoint(ipAddr, backEndPort));
+                }
+                catch (ArgumentNullException)
+                {
+                    Console.WriteLine("IP or port number is null");
+                    return;
+                }
+                catch (SocketException)
+                {
+                    Console.WriteLine("BackEnd Server is Off");
+                    continue;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    return;
+                }
+
+                sessionManager.AddSession(backEndSock);
+                Console.WriteLine("Connected to BackEnd server");
+                return;
+            }
         }
 
         public void ShutDown()
@@ -55,13 +98,14 @@ namespace ChatServer
 
         public void Start()
         {
+
             StartListen();
             acceptingThread = new Thread(new ThreadStart(Listen));
             acceptingThread.Start();
 
             while (true)
             {
-                ProcessReadableSession();
+                MainProcess();
             }
         }
 
@@ -75,65 +119,37 @@ namespace ChatServer
                 {
                     Socket newClient = listenSock.Accept();
                     Session session = sessionManager.AddSession(newClient);
-                    Console.WriteLine("Client" + session.id + "(" + session.ip + ")" + " has come");
+                    Console.WriteLine(session.id + "(" + session.sessionId + ", " + session.ip + ")" + " has come");
                 }
             }
         }
 
-        private void ProcessReadableSession()
+        private void MainProcess()
         {
             List<Session> readableSessions;
             readableSessions = sessionManager.GetReadableSessions();
 
             foreach (Session session in readableSessions)
             {
-                ProcessMessage(session);
+                
+                if(session.socket == backEndSock)
+                {
+                    SessionProcessor sp = new FBSessionProcessor(sessionManager);
+                    if (sp.ProcessReadableSession(session))
+                    {
+                        if (session == null)
+                        {
+                            ConnectToBackEnd();
+                        }
+                    }
+                }
+                else
+                {
+                    SessionProcessor sp = new CFSessionProcessor(sessionManager);
+                    sp.ProcessReadableSession(session);
+                }
             }
 
-        }
-        
-        private void ProcessMessage(Session session)
-        {
-            Socket socket = session.socket;
-            IPAddress ipAddress = session.ip;
-
-            byte[] headerByte;
-            byte[] bodyByte;
-
-            if (!ReceiveData(session, out headerByte, Marshal.SizeOf(typeof(Header))))
-                return;
-
-            Header header = (Header)Serializer.ByteToStructure(headerByte, typeof(Header));
-            short type = (short)header.type;
-            int bodyLength = header.length;
-            Console.WriteLine("type: " + type + ", length: " + bodyLength);
-
-            if (!ReceiveData(session, out bodyByte, bodyLength))
-                return;
-
-            string message = Serializer.BytesToString(bodyByte);
-            Console.WriteLine(message);
-        }
-
-        private bool ReceiveData(Session session, out byte[] buf, int size)
-        {
-            buf = new byte[size];
-            try
-            {
-                session.socket.Receive(buf);
-            }
-            catch (SocketException)
-            {
-                sessionManager.RemoveSession(session);
-                return false;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-                sessionManager.RemoveSession(session);
-                return false;
-            }
-            return true;
         }
     }
 }

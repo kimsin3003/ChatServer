@@ -7,14 +7,17 @@ namespace ChatServer
 {
     class SessionManager
     {
-        private List<Session> m_sessions;
-        private Queue<int> m_idCount;
+        private List<Session> sessions;
+        private List<KeyValuePair<int, Session>> a;
+        private Queue<int> idCount;
+        private int largestUsingId;
 
         public SessionManager()
         {
-            m_sessions = new List<Session>();
-            m_idCount = new Queue<int>();
-            m_idCount.Enqueue(1);
+            sessions = new List<Session>();
+            idCount = new Queue<int>();
+            idCount.Enqueue(1);
+            largestUsingId = 0;
 
         }
 
@@ -22,28 +25,22 @@ namespace ChatServer
         {
             List<Session> readableSessions = new List<Session>();
             List<Session> closedSessions = new List<Session>();
-            List<Session> sessions;
-            List<Socket> ss = new List<Socket>();
+            List<Session> sessionsClone;
 
-            lock (m_sessions)
+            //prevent sessions list edited by accepting process while this function is editing
+            lock (sessions)
             {
-                sessions = new List<Session>(m_sessions);
+                sessionsClone = new List<Session>(sessions);
             }
             
-            foreach (Session session in sessions)
+            foreach (Session session in sessionsClone)
             {
                 Socket socket = session.socket;
                 
                 //Although it's not listening socket
                 if (socket.Poll(10, SelectMode.SelectRead)) //It has something to read,
                 {
-                    if (socket.Available == 0) //but don't have any message to read. --> Connection has failed.
-                    {
-                        RemoveSession(session);
-                        continue;
-                    }
-                    if (socket.Available > 0)
-                        readableSessions.Add(session);
+                    readableSessions.Add(session);
                 }
             }
 
@@ -55,13 +52,19 @@ namespace ChatServer
             Session newSession = new Session();
 
             newSession.socket = socket;
-            lock (m_sessions)
+            lock (sessions)
             {
-                int count = m_idCount.Dequeue();
-                newSession.id = count;
-                m_idCount.Enqueue(count + 1);
+                int count = idCount.Dequeue();
+                newSession.sessionId = count;
+
+                if(count > largestUsingId)
+                {
+                    idCount.Enqueue(count + 1);
+                    largestUsingId = count;
+                }
+
                 newSession.ip = IPAddress.Parse(((IPEndPoint)socket.RemoteEndPoint).Address.ToString());
-                m_sessions.Add(newSession);                
+                sessions.Add(newSession);
             }
 
             return newSession;
@@ -69,13 +72,14 @@ namespace ChatServer
 
         public void RemoveSession(Session session)
         {
-            lock(m_sessions)
+            lock(sessions)
             {
-                Console.WriteLine("Client" + session.id + "(" + session.ip + ") has exit");
-                m_idCount.Enqueue(session.id);
+                Console.WriteLine("Client" + session.sessionId + "(" + session.ip + ") has exit");
+                idCount.Enqueue(session.sessionId);
                 session.socket.Shutdown(SocketShutdown.Both);
                 session.socket.Close();
-                m_sessions.Remove(session);
+                sessions.Remove(session);
+                session = null;
             }
         }
     }
