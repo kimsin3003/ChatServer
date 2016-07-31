@@ -5,7 +5,7 @@ namespace ChatServer
 {
     struct CFRoomRequestBody
     {
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
+        [MarshalAs(UnmanagedType.LPArray, SizeConst = 12)]
         public char[] id;
         public int roomNo;
     }

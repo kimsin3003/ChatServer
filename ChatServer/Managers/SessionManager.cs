@@ -9,9 +9,8 @@ namespace ChatServer
     {
         private IDictionary<int, Session> connectedSessions;
         private Queue<Session> sessionPool;
-        private List<KeyValuePair<int, Session>> a;
         private Queue<int> idCount;
-        static private SessionManager instance;
+        static private SessionManager instance = null;
 
         private SessionManager()
         {
@@ -140,6 +139,11 @@ namespace ChatServer
                     Console.WriteLine("session " + session.sessionId + " doesn't exist");
                 }
             }
+        }
+
+        static public void ShutDown()
+        {
+            instance = null;
         }
     }
 }

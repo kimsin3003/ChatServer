@@ -23,13 +23,13 @@ namespace ChatServer
 
         private static RoomManager instance = null;
         private IDictionary<int, Room> rooms;
-        private Queue<int> noCount;
+        private Queue<int> roomNumCount;
 
         private RoomManager()
         {
             rooms = new Dictionary<int, Room>();
-            noCount = new Queue<int>();
-            noCount.Enqueue(0);
+            roomNumCount = new Queue<int>();
+            roomNumCount.Enqueue(0);
         }
         
         public static RoomManager GetInstance()
@@ -45,7 +45,7 @@ namespace ChatServer
         
         public int MakeNewRoom()
         {
-            int roomNo = noCount.Dequeue();
+            int roomNo = roomNumCount.Dequeue();
             rooms.Add(roomNo, new Room(roomNo));
             Console.WriteLine("Room " + roomNo + " is made");
 
@@ -82,6 +82,11 @@ namespace ChatServer
             Console.WriteLine(userSession.Id + " went out the room " + roomNo);
             rooms[roomNo].chatters.Remove(userSession);
             userSession.roomNo = -1;
+        }
+
+        static public void ShutDown()
+        {
+            instance = null;            
         }
     }
 }

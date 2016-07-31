@@ -33,6 +33,22 @@ namespace ChatServer
             this.backEndPort = backEndPort;
         }
 
+        public void ShutDown()
+        {
+            cfSessionProcessor = null;
+            fbSessionProcessor = null;
+
+            listenSock.Shutdown(SocketShutdown.Both);
+            listenSock.Close();
+            acceptingThread.Join();
+
+            SessionManager.ShutDown();
+            RoomManager.ShutDown();
+
+
+            Console.WriteLine("Server has closed safely.");
+        }
+
         public int MaxClientNum
         {
             get { return maxClientNum; }
@@ -73,18 +89,6 @@ namespace ChatServer
             }
         }
 
-        public void ShutDown()
-        {
-            sessionManager = null;
-            cfSessionProcessor = null;
-            fbSessionProcessor = null;
-            
-            listenSock.Shutdown(SocketShutdown.Both);
-            listenSock.Close();
-            acceptingThread.Join();
-
-            Console.WriteLine("Server has closed safely.");
-        }
 
         public void StartListen()
         {

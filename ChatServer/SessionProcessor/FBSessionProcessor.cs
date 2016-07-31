@@ -73,19 +73,19 @@ namespace ChatServer
         private void LoginMessage(Session clientSession, FBHeader header, byte[] body)
         {
 
-            CFHeader RequestHeader = new CFHeader();
+            CFHeader requestHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)
             {
-                RequestHeader.state = CFMessageState.Success;
+                requestHeader.state = CFMessageState.Success;
             }
             if (header.state == FBMessageState.Request)
             {
-                RequestHeader.state = CFMessageState.Request;
+                requestHeader.state = CFMessageState.Request;
             }
             else if(header.state == FBMessageState.Fail)
             {
-                RequestHeader.state = CFMessageState.Fail;
+                requestHeader.state = CFMessageState.Fail;
             }
 
             byte[] data;
@@ -95,12 +95,12 @@ namespace ChatServer
             {
                 case FBMessageType.Id_Dup:
                     {
-                        RequestHeader.type = CFMessageType.Id_Dup;
+                        requestHeader.type = CFMessageType.Id_Dup;
                         break;
                     }
                 case FBMessageType.Signup:
                     {
-                        RequestHeader.type = CFMessageType.Signup;
+                        requestHeader.type = CFMessageType.Signup;
                         break;
                     }
                 case FBMessageType.Login:
@@ -109,13 +109,16 @@ namespace ChatServer
                         {
                             clientSession.LogIn(requestFromClient.id);
                         }
-                        RequestHeader.type = CFMessageType.Login;
+                        requestHeader.type = CFMessageType.Login;
                         break;
                     }
                 case FBMessageType.LogOut:
                     {
-                        clientSession.LogOut();
-                        RequestHeader.type = CFMessageType.LogOut;
+                        if (header.state == FBMessageState.Success)
+                        {
+                            clientSession.LogOut();
+                        }
+                        requestHeader.type = CFMessageType.LogOut;
                         break;
                     }
                 default:
@@ -124,9 +127,9 @@ namespace ChatServer
 
             }
 
-            byte[] headerByte = Serializer.StructureToByte(RequestHeader);
+            byte[] headerByte = Serializer.StructureToByte(requestHeader);
             SendData(clientSession, headerByte);
-            
+
             CFLoginResponseBody requestBody = new CFLoginResponseBody();
 
             byte[] bodyByte = Serializer.StructureToByte(requestBody);
@@ -138,46 +141,62 @@ namespace ChatServer
         private void RoomMessage(Session clientSession, FBHeader header, byte[] body)
         {
 
-            CFHeader RequestHeader = new CFHeader();
+            CFHeader requestHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)
             {
-                RequestHeader.state = CFMessageState.Success;
+                requestHeader.state = CFMessageState.Success;
             }
             else if (header.state == FBMessageState.Fail)
             {
-                RequestHeader.state = CFMessageState.Success;
+                requestHeader.state = CFMessageState.Success;
             }
             else
             {
-                RequestHeader.state = CFMessageState.Request;
+                requestHeader.state = CFMessageState.Request;
             }
 
             switch (header.type)
             {
                 case FBMessageType.Room_Create:
                     {
-                        RequestHeader.type = CFMessageType.Room_Create;
+                        if (header.state == FBMessageState.Success)
+                        {
+                            RoomManager.GetInstance().MakeNewRoom();
+                        }
+                        requestHeader.type = CFMessageType.Room_Create;
                         break;
                     }
                 case FBMessageType.Room_Delete:
                     {
-                        RequestHeader.type = CFMessageType.Room_Delete;
+                        if (header.state == FBMessageState.Success)
+                        {
+                            RoomManager.GetInstance().RemoveRoom(clientSession.roomNo);
+                        }
+                        requestHeader.type = CFMessageType.Room_Delete;
                         break;
                     }
                 case FBMessageType.Room_Join:
                     {
-                        RequestHeader.type = CFMessageType.Room_Join;
+                        if (header.state == FBMessageState.Success)
+                        {
+                            RoomManager.GetInstance().AddUserInRoom(clientSession, clientSession.roomNo);
+                        }
+                        requestHeader.type = CFMessageType.Room_Join;
                         break;
                     }
                 case FBMessageType.Room_Leave:
                     {
-                        RequestHeader.type = CFMessageType.Room_Leave;
+                        if (header.state == FBMessageState.Success)
+                        {
+                            RoomManager.GetInstance().RemoveUserInRoom(clientSession, clientSession.roomNo);
+                        }
+                        requestHeader.type = CFMessageType.Room_Leave;
                         break;
                     }
                 case FBMessageType.Room_List:
                     {
-                        RequestHeader.type = CFMessageType.Room_List;
+                        requestHeader.type = CFMessageType.Room_List;
                         break;
                     }
                 default:
@@ -186,14 +205,13 @@ namespace ChatServer
 
             }
 
-            byte[] headerByte = Serializer.StructureToByte(RequestHeader);
+            byte[] headerByte = Serializer.StructureToByte(requestHeader);
             SendData(clientSession, headerByte);
 
             byte[] data;
             ReceiveData(clientSession, out data, Marshal.SizeOf<FBRoomResponseBody>());
 
-            //No use for now.
-            //FBLoginResponseBody requestFromClient = (FBLoginResponseBody)Serializer.ByteToStructure(data, typeof(FBLoginResponseBody));
+            FBLoginResponseBody requestFromClient = (FBLoginResponseBody)Serializer.ByteToStructure(data, typeof(FBLoginResponseBody));
 
             CFRoomResponseBody requestBody = new CFRoomResponseBody();
 

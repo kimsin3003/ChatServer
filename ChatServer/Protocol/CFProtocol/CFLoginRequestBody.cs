@@ -4,9 +4,9 @@ namespace ChatServer
 {
     struct CFLoginRequestBody
     {
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
+        [MarshalAs(UnmanagedType.LPArray, SizeConst = 12)]
         public char[] id;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
         public char[] password;
     }
 }

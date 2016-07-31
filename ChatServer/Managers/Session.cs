@@ -76,6 +76,11 @@ namespace ChatServer
             id = null;
             isConnected = false;
         }
+
+        public bool IsInRoom()
+        {
+            return (roomNo == -1) ? false : true;
+        }
         
     }
 

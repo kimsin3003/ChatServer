@@ -5,8 +5,6 @@ namespace ChatServer
 {
     struct CFChatBody
     {
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
-        public char[] id;
         public byte[] data;// data can be : chat Room List, FE IP-PORT, chat room no 
     }
 }

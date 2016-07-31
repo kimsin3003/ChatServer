@@ -127,6 +127,25 @@ namespace ChatServer
 
         private void RoomMessage(Session clientSession, Session backEndSession, CFHeader header, byte[] body)
         {
+            if (!clientSession.IsLogedIn())
+            {
+                CFHeader responseHeader = new CFHeader();
+                responseHeader.type = header.type;
+                responseHeader.state = CFMessageState.Fail;
+
+                responseHeader.length = Marshal.SizeOf<CFRoomResponseBody>();
+
+                byte[] failHeaderByte = Serializer.StructureToByte(responseHeader);
+                SendData(clientSession, failHeaderByte);
+
+
+                CFRoomResponseBody failResponseBody = new CFRoomResponseBody();
+
+                byte[] failBodyByte = Serializer.StructureToByte(failResponseBody);
+
+                SendData(clientSession, failBodyByte);
+                return;
+            }
 
             byte[] data;
             ReceiveData(clientSession, out data, Marshal.SizeOf<CFLoginRequestBody>());
@@ -142,13 +161,11 @@ namespace ChatServer
                     }
                 case CFMessageType.Room_Join:
                     {
-                        RoomManager.GetInstance().AddUserInRoom(clientSession, requestFromClient.roomNo);
                         requestHeader.type = FBMessageType.Room_Create;
                         break;
                     }
                 case CFMessageType.Room_Leave:
                     {
-                        RoomManager.GetInstance().RemoveUserInRoom(clientSession, requestFromClient.roomNo);
                         requestHeader.type = FBMessageType.Room_Create;
                         break;
                     }
@@ -180,6 +197,25 @@ namespace ChatServer
 
         private void ChatMassage(Session clientSession, Session backEndSession, CFHeader header, byte[] body)
         {
+            if (!clientSession.IsInRoom())
+            {
+                CFHeader responseHeader = new CFHeader();
+                responseHeader.type = header.type;
+                responseHeader.state = CFMessageState.Fail;
+
+                responseHeader.length = Marshal.SizeOf<CFChatBody>();
+
+                byte[] failHeaderByte = Serializer.StructureToByte(responseHeader);
+                SendData(clientSession, failHeaderByte);
+
+
+                CFChatBody failResponseBody = new CFChatBody();
+
+                byte[] failBodyByte = Serializer.StructureToByte(failResponseBody);
+
+                SendData(clientSession, failBodyByte);
+                return;
+            }
 
             FBHeader requestHeader = new FBHeader();
             switch (header.type)
