@@ -17,6 +17,7 @@ namespace ChatServer
             return data;
         }        
 
+
         public static object ByteToStructure(byte[] data, Type type)
         {
             IntPtr buff = Marshal.AllocHGlobal(data.Length);

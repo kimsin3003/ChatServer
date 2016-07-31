@@ -5,50 +5,42 @@ namespace ChatServer
 {
     abstract class SessionProcessor
     {
-        protected SessionManager sessionManager;
-        public SessionProcessor(SessionManager sm)
-        {
-            sessionManager = sm;
-        }
-
-        public abstract bool ProcessReadableSession(Session session);
-
         protected bool ReceiveData(Session session, out byte[] buf, int size)
         {
             buf = new byte[size];
             try
             {
-                session.socket.Receive(buf);
+                session.Socket.Receive(buf);
             }
             catch (SocketException)
             {
-                sessionManager.RemoveSession(session);
+                session.LogOut();
                 return false;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-                sessionManager.RemoveSession(session);
+                session.LogOut();
                 return false;
             }
             return true;
         }
 
-        protected bool SendData(Session session, byte[] buf, int size)
+        protected bool SendData(Session session, byte[] buf)
         {
             try
             {
-                session.socket.Send(buf);
+                session.Socket.Send(buf);
             }
             catch (SocketException)
             {
-                sessionManager.RemoveSession(session);
+                session.LogOut();
                 return false;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-                sessionManager.RemoveSession(session);
+                session.LogOut();
                 return false;
             }
             return true;

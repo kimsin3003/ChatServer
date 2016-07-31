@@ -2,7 +2,7 @@
 namespace ChatServer
 {
 
-    struct LoginResponseBody
+    struct CFLoginResponseBody
     {
         // none 
     }

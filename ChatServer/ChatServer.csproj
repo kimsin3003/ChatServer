@@ -59,12 +59,12 @@
     <Compile Include="Protocol\FBProtocol\FBRoomResponseBody.cs" />
     <Compile Include="Protocol\CFProtocol\CFLoginRequestBody.cs" />
     <Compile Include="Protocol\CFProtocol\CFLoginResponseBody.cs" />
-    <Compile Include="RoomManager.cs" />
+    <Compile Include="Managers\RoomManager.cs" />
     <Compile Include="Serializer.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="ServerMain.cs" />
-    <Compile Include="Session.cs" />
-    <Compile Include="SessionManager.cs" />
+    <Compile Include="Managers\Session.cs" />
+    <Compile Include="Managers\SessionManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

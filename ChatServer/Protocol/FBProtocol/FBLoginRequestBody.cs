@@ -2,12 +2,12 @@ using System.Runtime.InteropServices;
 
 namespace ChatServer
 {
-    struct LoginRequestBody
+    struct FBLoginRequestBody
     {
         [MarshalAs(UnmanagedType.LPArray, SizeConst = 12)]
-        char[] id;
+        public char[] id;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-        char[] password;
-        bool isDummy;
+        public char[] password;
+        public bool isDummy;
     }
 }

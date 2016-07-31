@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Threading;
-using System.Runtime.InteropServices;
 
 namespace ChatServer
 {
@@ -12,23 +11,31 @@ namespace ChatServer
         private IPEndPoint ipEndPoint;
         private Socket listenSock;
         private int maxClientNum;
-        private SessionManager sessionManager;
+        private FBSessionProcessor fbSessionProcessor;
+        private CFSessionProcessor cfSessionProcessor;
         private Thread acceptingThread;
         
         private string backEndIp;
         private int backEndPort;
-        private Socket backEndSock;
+        private Session backEndSession;
 
         public Server(int port, string backEndIp, int backEndPort)
         {
             ipEndPoint = new IPEndPoint(IPAddress.Any, port);
             listenSock = null;
-            backEndSock = null;
-            maxClientNum = 10;
-            sessionManager = new SessionManager();
+            backEndSession = null;
+            maxClientNum = 100;
+            SessionManager.GetInstance().Init(11000);
+            fbSessionProcessor = new FBSessionProcessor();
+            cfSessionProcessor = new CFSessionProcessor();
 
             this.backEndIp = backEndIp;
             this.backEndPort = backEndPort;
+        }
+
+        public int MaxClientNum
+        {
+            get { return maxClientNum; }
         }
 
         public void ConnectToBackEnd()
@@ -36,7 +43,7 @@ namespace ChatServer
             IPHostEntry ipHost = Dns.GetHostEntry(backEndIp);
             IPAddress ipAddr = ipHost.AddressList[1];     //In index 0, there's ipv6 address.
             
-            backEndSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            Socket backEndSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             while(true)
             {
@@ -60,7 +67,7 @@ namespace ChatServer
                     return;
                 }
 
-                sessionManager.AddSession(backEndSock);
+                backEndSession = SessionManager.GetInstance().MakeNewSession(backEndSock);
                 Console.WriteLine("Connected to BackEnd server");
                 return;
             }
@@ -68,8 +75,15 @@ namespace ChatServer
 
         public void ShutDown()
         {
+            sessionManager = null;
+            cfSessionProcessor = null;
+            fbSessionProcessor = null;
+            
             listenSock.Shutdown(SocketShutdown.Both);
             listenSock.Close();
+            acceptingThread.Join();
+
+            Console.WriteLine("Server has closed safely.");
         }
 
         public void StartListen()
@@ -98,9 +112,8 @@ namespace ChatServer
 
         public void Start()
         {
-
             StartListen();
-            acceptingThread = new Thread(new ThreadStart(Listen));
+            acceptingThread = new Thread(new ThreadStart(AcceptingProcess));
             acceptingThread.Start();
 
             while (true)
@@ -109,7 +122,7 @@ namespace ChatServer
             }
         }
 
-        private void Listen()
+        private void AcceptingProcess()
         {
             while (true)
             {
@@ -118,26 +131,24 @@ namespace ChatServer
                 if (listenSock.Poll(10, SelectMode.SelectRead))
                 {
                     Socket newClient = listenSock.Accept();
-                    Session session = sessionManager.AddSession(newClient);
-                    Console.WriteLine(session.id + "(" + session.sessionId + ", " + session.ip + ")" + " has come");
+                    Session session = SessionManager.GetInstance().MakeNewSession(newClient);
+                    Console.WriteLine("Client(" + session.sessionId + ", " + session.Ip + ")" + " is Connected");
                 }
             }
         }
 
         private void MainProcess()
         {
-            List<Session> readableSessions;
-            readableSessions = sessionManager.GetReadableSessions();
+            List<Session> readableSessions = SessionManager.GetInstance().GetReadableSessions();
 
             foreach (Session session in readableSessions)
             {
                 
-                if(session.socket == backEndSock)
+                if(session == backEndSession)
                 {
-                    SessionProcessor sp = new FBSessionProcessor(sessionManager);
-                    if (sp.ProcessReadableSession(session))
+                    if (fbSessionProcessor.ProcessReadableSession(session))
                     {
-                        if (session == null)
+                        if (!session.isConnected)
                         {
                             ConnectToBackEnd();
                         }
@@ -145,11 +156,11 @@ namespace ChatServer
                 }
                 else
                 {
-                    SessionProcessor sp = new CFSessionProcessor(sessionManager);
-                    sp.ProcessReadableSession(session);
+                    cfSessionProcessor.ProcessReadableSession(session, backEndSession);
                 }
             }
 
+            SessionManager.GetInstance().RemoveClosedSessions();
         }
     }
 }

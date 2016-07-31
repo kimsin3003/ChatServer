@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace ChatServer
 {
     [StructLayout(LayoutKind.Sequential, Pack = 2)]
-    struct FBHeader : Header
+    struct FBHeader
     {
         public FBMessageType type;
         public FBMessageState state;
@@ -17,20 +17,22 @@ namespace ChatServer
         Signup = 120,
 
         Login = 210,
+        LogOut = 220,
 
         Room_Create = 310,
         Room_Leave = 320,
         Room_Join = 330,
         Room_List = 340,
+        Room_Delete = 350,
 
         Chat_Count = 410
     };
 
     enum FBMessageState : short
     {
-        REQUEST = 100,
-        SUCCESS = 200,
-        FAIL = 400
+        Request = 100,
+        Success = 200,
+        Fail = 400
     }
 
 }
