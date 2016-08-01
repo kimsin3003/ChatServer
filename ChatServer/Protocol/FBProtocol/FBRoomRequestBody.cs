@@ -5,7 +5,7 @@ namespace ChatServer
 {
     struct FBRoomRequestBody
     {
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]
         public char[] id;
         public int roomNo;
     }

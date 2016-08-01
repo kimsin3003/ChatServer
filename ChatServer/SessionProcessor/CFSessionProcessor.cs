@@ -23,15 +23,14 @@ namespace ChatServer
                 clientSession.isConnected = false;
                 return false;
             }
-            else
+
+
+            if (!ReceiveData(clientSession, out headerByte, Marshal.SizeOf(typeof(CFHeader))))
             {
-                if (!ReceiveData(clientSession, out headerByte, Marshal.SizeOf(typeof(CFHeader))))
-                {
-                    return false;
-                }
-                header = (CFHeader)Serializer.ByteToStructure(headerByte, typeof(CFHeader));
-                bodyLength = header.length;
+                return false;
             }
+            header = (CFHeader)Serializer.ByteToStructure(headerByte, typeof(CFHeader));
+            bodyLength = header.length;
 
             if (!ReceiveData(clientSession, out body, bodyLength))
             {
@@ -50,8 +49,10 @@ namespace ChatServer
 
             switch (type)
             {
-                case CFMessageType.Id_Dup:
                 case CFMessageType.Signup:
+                    SignUpMessage(session, backEndSession, header, body);
+                    break;
+                case CFMessageType.Id_Dup:
                 case CFMessageType.Login:
                 case CFMessageType.LogOut:
                     LoginMessage(session, backEndSession, header, body);
@@ -71,7 +72,29 @@ namespace ChatServer
                     break;
             }
         }
+        private void SignUpMessage(Session clientSession, Session backEndSession, CFHeader header, byte[] body)
+        {
+            FBHeader requestHeader = new FBHeader();
 
+            requestHeader.type = FBMessageType.Signup;
+            requestHeader.length = Marshal.SizeOf<FBSignupRequestBody>();
+            requestHeader.state = FBMessageState.Request;
+            requestHeader.sessionId = clientSession.sessionId;
+
+            byte[] headerByte = Serializer.StructureToByte(requestHeader);
+            SendData(backEndSession, headerByte);
+            
+            CFSignupRequestBody requestFromClient = (CFSignupRequestBody)Serializer.ByteToStructure(body, typeof(CFSignupRequestBody));
+
+            FBSignupRequestBody requestBody = new FBSignupRequestBody();
+            requestBody.id = requestFromClient.id;
+            requestBody.password = requestFromClient.password;
+            requestBody.isDummy = requestFromClient.isDummy;
+
+            byte[] bodyByte = Serializer.StructureToByte(requestBody);
+
+            SendData(backEndSession, bodyByte);
+        }
         private void LoginMessage(Session clientSession, Session backEndSession, CFHeader header, byte[] body)
         {
 
@@ -81,11 +104,6 @@ namespace ChatServer
                 case CFMessageType.Id_Dup:
                     {
                         requestHeader.type = FBMessageType.Id_Dup;
-                        break;
-                    }
-                case CFMessageType.Signup:
-                    {
-                        requestHeader.type = FBMessageType.Signup;
                         break;
                     }
                 case CFMessageType.Login:
@@ -103,17 +121,15 @@ namespace ChatServer
                     return;
             }
 
-            requestHeader.length = Marshal.SizeOf<FBLoginRequestBody>();
+            requestHeader.length = body.Length;
             requestHeader.state = FBMessageState.Request;
             requestHeader.sessionId = clientSession.sessionId;
 
             byte[] headerByte = Serializer.StructureToByte(requestHeader);
             SendData(backEndSession, headerByte);
 
-
-            byte[] data;
-            ReceiveData(clientSession, out data, Marshal.SizeOf<CFLoginRequestBody>());
-            CFLoginRequestBody requestFromClient = (CFLoginRequestBody)Serializer.ByteToStructure(data, typeof(CFLoginRequestBody));
+            
+            CFLoginRequestBody requestFromClient = (CFLoginRequestBody)Serializer.ByteToStructure(body, typeof(CFLoginRequestBody));
 
             FBLoginRequestBody requestBody = new FBLoginRequestBody();
             requestBody.id = requestFromClient.id;
@@ -146,10 +162,8 @@ namespace ChatServer
                 SendData(clientSession, failBodyByte);
                 return;
             }
-
-            byte[] data;
-            ReceiveData(clientSession, out data, Marshal.SizeOf<CFLoginRequestBody>());
-            CFRoomRequestBody requestFromClient = (CFRoomRequestBody)Serializer.ByteToStructure(data, typeof(CFRoomRequestBody));
+            
+            CFRoomRequestBody requestFromClient = (CFRoomRequestBody)Serializer.ByteToStructure(body, typeof(CFRoomRequestBody));
 
             FBHeader requestHeader = new FBHeader();
             switch (header.type)
@@ -180,7 +194,7 @@ namespace ChatServer
             }
             requestHeader.state = FBMessageState.Request;
             requestHeader.sessionId = clientSession.sessionId;
-            requestHeader.length = Marshal.SizeOf<FBRoomRequestBody>();
+            requestHeader.length = body.Length;
             byte[] headerByte = Serializer.StructureToByte(requestHeader);
             SendData(backEndSession, headerByte);
 
@@ -203,17 +217,12 @@ namespace ChatServer
                 responseHeader.type = header.type;
                 responseHeader.state = CFMessageState.Fail;
 
-                responseHeader.length = Marshal.SizeOf<CFChatBody>();
+                responseHeader.length = body.Length;
 
                 byte[] failHeaderByte = Serializer.StructureToByte(responseHeader);
                 SendData(clientSession, failHeaderByte);
-
-
-                CFChatBody failResponseBody = new CFChatBody();
-
-                byte[] failBodyByte = Serializer.StructureToByte(failResponseBody);
-
-                SendData(clientSession, failBodyByte);
+                
+                SendData(clientSession, body);
                 return;
             }
 
@@ -233,15 +242,9 @@ namespace ChatServer
 
             requestHeader.state = FBMessageState.Request;
             requestHeader.sessionId = clientSession.sessionId;
-            requestHeader.length = Marshal.SizeOf<FBChatRequestBody>();
+            requestHeader.length = body.Length;
             byte[] headerByte = Serializer.StructureToByte(requestHeader);
             SendData(backEndSession, headerByte);
-
-            byte[] data;
-            ReceiveData(clientSession, out data, Marshal.SizeOf<CFLoginRequestBody>());
-
-            //no use for now
-            //CFLoginRequestBody requestFromClient = (CFLoginRequestBody)Serializer.ByteToStructure(data, typeof(CFLoginRequestBody));
             
             FBChatRequestBody requestBody = new FBChatRequestBody();
 

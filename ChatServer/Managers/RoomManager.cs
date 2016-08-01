@@ -77,10 +77,10 @@ namespace ChatServer
         }
 
 
-        public void RemoveUserInRoom(Session userSession, int roomNo)
+        public void RemoveUserInRoom(Session userSession)
         {
-            Console.WriteLine(userSession.Id + " went out the room " + roomNo);
-            rooms[roomNo].chatters.Remove(userSession);
+            Console.WriteLine(userSession.Id + " went out the room " + userSession.roomNo);
+            rooms[userSession.roomNo].chatters.Remove(userSession);
             userSession.roomNo = -1;
         }
 

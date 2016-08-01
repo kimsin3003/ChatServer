@@ -43,6 +43,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Protocol\CFProtocol\CFSignupRequestBody.cs" />
+    <Compile Include="Protocol\CFProtocol\CFSignupResponseBody.cs" />
+    <Compile Include="Protocol\FBProtocol\FBSignupRequestBody.cs" />
+    <Compile Include="Protocol\FBProtocol\FBSignupResponseBody.cs" />
     <Compile Include="SessionProcessor\CFSessionProcessor.cs" />
     <Compile Include="SessionProcessor\FBSessionProcessor.cs" />
     <Compile Include="SessionProcessor\SessionProcessor.cs" />

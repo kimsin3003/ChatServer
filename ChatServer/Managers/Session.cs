@@ -49,16 +49,7 @@ namespace ChatServer
             ip = IPAddress.Parse(((IPEndPoint)socket.RemoteEndPoint).Address.ToString());
         }
 
-
-        public Session(Session session)
-        {
-            socket = session.socket;
-            id = session.id;
-            sessionId = session.sessionId;
-            ip = new IPAddress(session.ip.Address);
-            isConnected = session.isConnected;
-        }
-
+     
         public void LogIn(char[] id)
         {
             this.id = id;

@@ -77,17 +77,25 @@ namespace ChatServer
 
         public void RemoveClosedSessions()
         {
+            List<Session> sessionToRemove = new List<Session>();
+            
             lock (connectedSessions)
             {
                 foreach (KeyValuePair<int, Session> item in connectedSessions)
                 {
                     Session session = item.Value;
-                    if(session.isConnected)
+                    if(!session.isConnected)
                     {
-                        RemoveSession(session);
+                        sessionToRemove.Add(session);
                     }
                 }
             }
+
+            foreach (Session session in sessionToRemove)
+            {
+                RemoveSession(session);
+            }
+
         }
 
         public Session MakeNewSession(Socket socket)
@@ -120,7 +128,7 @@ namespace ChatServer
             return newSession;
         }
         
-        public void RemoveSession(Session session)
+        private void RemoveSession(Session session)
         {
             lock(connectedSessions)
             {

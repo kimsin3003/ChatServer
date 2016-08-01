@@ -7,7 +7,22 @@ namespace ChatServer
     {
         static void Main(string[] args)
         {
-            Server server = new Server(11000, "10.100.58.7", 11000);
+
+            if (args.Length == 1 && args[0] == "-help")
+            {
+                Console.WriteLine("port ");
+                return;
+            }
+
+            if (args.Length == 0)
+            {
+                Console.WriteLine("not enough argumensts");
+                return;
+            }
+
+
+            Console.WriteLine("Start Server");
+            Server server = new Server(Int32.Parse(args[0]), "10.100.58.3", 15389, 100);
             server.Start();
             server.ShutDown();
         }

@@ -19,13 +19,13 @@ namespace ChatServer
         private int backEndPort;
         private Session backEndSession;
 
-        public Server(int port, string backEndIp, int backEndPort)
+        public Server(int port, string backEndIp, int backEndPort, int maxClientNum)
         {
             ipEndPoint = new IPEndPoint(IPAddress.Any, port);
             listenSock = null;
             backEndSession = null;
-            maxClientNum = 100;
-            SessionManager.GetInstance().Init(11000);
+            this.maxClientNum = maxClientNum;
+            SessionManager.GetInstance().Init(maxClientNum);
             fbSessionProcessor = new FBSessionProcessor();
             cfSessionProcessor = new CFSessionProcessor();
 
@@ -49,19 +49,15 @@ namespace ChatServer
             Console.WriteLine("Server has closed safely.");
         }
 
-        public int MaxClientNum
-        {
-            get { return maxClientNum; }
-        }
-
         public void ConnectToBackEnd()
         {
+            Console.WriteLine("Connecting To BackEnd Server...");
             IPHostEntry ipHost = Dns.GetHostEntry(backEndIp);
-            IPAddress ipAddr = ipHost.AddressList[1];     //In index 0, there's ipv6 address.
+            IPAddress ipAddr = ipHost.AddressList[0];
             
             Socket backEndSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            while(true)
+            while (true)
             {
                 try
                 {
@@ -74,7 +70,7 @@ namespace ChatServer
                 }
                 catch (SocketException)
                 {
-                    Console.WriteLine("BackEnd Server is Off");
+                    Console.WriteLine("Where is he??");
                     continue;
                 }
                 catch (Exception e)
@@ -116,6 +112,7 @@ namespace ChatServer
 
         public void Start()
         {
+            ConnectToBackEnd();
             StartListen();
             acceptingThread = new Thread(new ThreadStart(AcceptingProcess));
             acceptingThread.Start();
@@ -147,15 +144,15 @@ namespace ChatServer
 
             foreach (Session session in readableSessions)
             {
-                
-                if(session == backEndSession)
+
+                if (session == backEndSession)
                 {
-                    if (fbSessionProcessor.ProcessReadableSession(session))
+                    fbSessionProcessor.ProcessReadableSession(session);
+
+                    if (!session.isConnected)
                     {
-                        if (!session.isConnected)
-                        {
-                            ConnectToBackEnd();
-                        }
+                        Console.WriteLine("Backend Server is down");
+                        ConnectToBackEnd();
                     }
                 }
                 else
