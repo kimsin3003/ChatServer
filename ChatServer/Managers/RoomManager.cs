@@ -23,13 +23,10 @@ namespace ChatServer
 
         private static RoomManager instance = null;
         private IDictionary<int, Room> rooms;
-        private Queue<int> roomNumCount;
 
         private RoomManager()
         {
             rooms = new Dictionary<int, Room>();
-            roomNumCount = new Queue<int>();
-            roomNumCount.Enqueue(0);
         }
         
         public static RoomManager GetInstance()
@@ -43,9 +40,8 @@ namespace ChatServer
         }
 
         
-        public int MakeNewRoom()
+        public int MakeNewRoom(int roomNo)
         {
-            int roomNo = roomNumCount.Dequeue();
             rooms.Add(roomNo, new Room(roomNo));
             Console.WriteLine("Room " + roomNo + " is made");
 

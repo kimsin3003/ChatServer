@@ -103,16 +103,19 @@ namespace ChatServer
             {
                 case CFMessageType.Id_Dup:
                     {
+                        Console.WriteLine("ID dup Request");
                         requestHeader.type = FBMessageType.Id_Dup;
                         break;
                     }
                 case CFMessageType.Login:
                     {
+                        Console.WriteLine("ID Login Request");
                         requestHeader.type = FBMessageType.Login;
                         break;
                     }
                 case CFMessageType.LogOut:
                     {
+                        Console.WriteLine("ID Logout Request");
                         requestHeader.type = FBMessageType.LogOut;
                         break;
                     }
@@ -170,22 +173,26 @@ namespace ChatServer
             {
                 case CFMessageType.Room_Create:
                     {
+                        Console.WriteLine("Room Create Request");
                         requestHeader.type = FBMessageType.Room_Create;
                         break;
                     }
                 case CFMessageType.Room_Join:
                     {
-                        requestHeader.type = FBMessageType.Room_Create;
+                        Console.WriteLine("Room Join Request");
+                        requestHeader.type = FBMessageType.Room_Join;
                         break;
                     }
                 case CFMessageType.Room_Leave:
                     {
-                        requestHeader.type = FBMessageType.Room_Create;
+                        Console.WriteLine("Room Leave Request");
+                        requestHeader.type = FBMessageType.Room_Leave;
                         break;
                     }
                 case CFMessageType.Room_List:
                     {
-                        requestHeader.type = FBMessageType.Room_Create;
+                        Console.WriteLine("Room List Request");
+                        requestHeader.type = FBMessageType.Room_List;
                         break;
                     }
                 default:

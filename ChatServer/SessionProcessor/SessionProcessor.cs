@@ -7,6 +7,13 @@ namespace ChatServer
     {
         protected bool ReceiveData(Session session, out byte[] buf, int size)
         {
+
+            if(size == 0)
+            {
+                buf = null;
+                return true;
+            }
+
             buf = new byte[size];
             try
             {
