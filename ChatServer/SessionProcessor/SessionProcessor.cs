@@ -17,17 +17,18 @@ namespace ChatServer
             buf = new byte[size];
             try
             {
-                session.Socket.Receive(buf);
+                if(session.Socket.Receive(buf) == 0)
+                {
+                    return false;
+                }
             }
             catch (SocketException)
             {
-                session.LogOut();
                 return false;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-                session.LogOut();
                 return false;
             }
             return true;

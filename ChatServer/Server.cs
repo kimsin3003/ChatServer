@@ -71,6 +71,7 @@ namespace ChatServer
                 catch (SocketException)
                 {
                     Console.WriteLine("Where is he??");
+                    Thread.Sleep(1000);
                     continue;
                 }
                 catch (Exception e)
@@ -142,10 +143,12 @@ namespace ChatServer
         {
             List<Session> readableSessions = SessionManager.GetInstance().GetReadableSessions();
 
+            if (readableSessions == null)
+                return;
             foreach (Session session in readableSessions)
             {
 
-                if (session == backEndSession)
+                if (session.Socket == backEndSession.Socket)
                 {
                     fbSessionProcessor.ProcessReadableSession(session);
 

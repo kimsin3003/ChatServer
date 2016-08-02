@@ -18,15 +18,9 @@ namespace ChatServer
             byte[] body;
             int bodyLength;
 
-
-            if (socket.Available == 0)
-            {
-                backEndSession.isConnected = false;
-                return false;
-            }
-
             if (!ReceiveData(backEndSession, out headerByte, Marshal.SizeOf(typeof(FBHeader))))
             {
+                backEndSession.LogOut();
                 return false;
             }
 
@@ -36,6 +30,7 @@ namespace ChatServer
 
             if (!ReceiveData(backEndSession, out body, bodyLength))
             {
+                backEndSession.LogOut();
                 return false;
             }
 
@@ -93,15 +88,8 @@ namespace ChatServer
             }
 
             requestHeader.type = CFMessageType.Signup;
-
-            if (body == null)
-            {
-                requestHeader.length = 0;
-            }
-            else
-            {
-                requestHeader.length = body.Length;
-            }
+            
+            requestHeader.length = 0;
 
             byte[] headerByte = Serializer.StructureToByte(requestHeader);
             SendData(clientSession, headerByte);
@@ -111,19 +99,19 @@ namespace ChatServer
         private void LoginMessage(Session clientSession, FBHeader header, byte[] body)
         {
 
-            CFHeader requestHeader = new CFHeader();
+            CFHeader responseHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)
             {
-                requestHeader.state = CFMessageState.Success;
+                responseHeader.state = CFMessageState.Success;
             }
             else if (header.state == FBMessageState.Fail)
             {
-                requestHeader.state = CFMessageState.Fail;
+                responseHeader.state = CFMessageState.Fail;
             }
             else
             {
-                requestHeader.state = CFMessageState.Request;
+                responseHeader.state = CFMessageState.Request;
             }
 
             switch (header.type)
@@ -134,7 +122,7 @@ namespace ChatServer
                         {
                             Console.WriteLine("Id not duplicated");
                         }
-                        requestHeader.type = CFMessageType.Id_Dup;
+                        responseHeader.type = CFMessageType.Id_Dup;
                         break;
                     }
                 case FBMessageType.Login:
@@ -145,7 +133,7 @@ namespace ChatServer
                             clientSession.LogIn(responseFromBackEnd.id);
                             Console.WriteLine(new string(responseFromBackEnd.id) + " is logged in");
                         }
-                        requestHeader.type = CFMessageType.Login;
+                        responseHeader.type = CFMessageType.Login;
                         break;
                     }
                 case FBMessageType.LogOut:
@@ -160,7 +148,7 @@ namespace ChatServer
                                 RoomManager.GetInstance().RemoveUserInRoom(clientSession);
                             }
                         }
-                        requestHeader.type = CFMessageType.LogOut;
+                        responseHeader.type = CFMessageType.LogOut;
                         break;
                     }
                 default:
@@ -168,18 +156,10 @@ namespace ChatServer
                     return;
 
             }
+            
+            responseHeader.length = 0;
 
-            if (body == null)
-            {
-                requestHeader.length = 0;
-            }
-            else
-            {
-                requestHeader.length = body.Length;
-            }
-
-
-            byte[] headerByte = Serializer.StructureToByte(requestHeader);
+            byte[] headerByte = Serializer.StructureToByte(responseHeader);
             SendData(clientSession, headerByte);
             
         }

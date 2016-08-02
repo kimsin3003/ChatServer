@@ -14,6 +14,7 @@ namespace ChatServer
         public int sessionId;
         public int roomNo;
         public bool isConnected;
+        public double startTime;
 
         public char[] Id
         {
@@ -30,8 +31,14 @@ namespace ChatServer
             get { return socket; }
         }
 
+        public double Time
+        {
+            get { return startTime; }
+        }
+
         public Session()
         {
+            startTime = 0;
             socket = null;
             ip = null;
             isConnected = false;
@@ -39,15 +46,17 @@ namespace ChatServer
             roomNo = -1;
         }
 
-        public void Init(Socket socket)
+        public void Init(Socket socket, double healthCheckTimeLimit)
         {
             isConnected = false;
             sessionId = -1;
             roomNo = -1;
             this.socket = socket;
             id = null;
+            startTime = healthCheckTimeLimit;
             ip = IPAddress.Parse(((IPEndPoint)socket.RemoteEndPoint).Address.ToString());
         }
+        
 
      
         public void LogIn(char[] id)
@@ -65,7 +74,6 @@ namespace ChatServer
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
             id = null;
-            isConnected = false;
         }
 
         public bool IsInRoom()

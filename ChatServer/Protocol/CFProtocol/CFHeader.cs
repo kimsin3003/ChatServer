@@ -26,6 +26,8 @@ namespace ChatServer
 
         Chat_MSG_From_Client = 410,
         Chat_MSG_Broadcast = 420,
+
+        HeartBit = 500
     };
 
     enum CFMessageState : short

@@ -17,14 +17,7 @@ namespace ChatServer
             byte[] headerByte;
             byte[] body;
             int bodyLength;
-
-            if (socket.Available == 0)
-            {
-                clientSession.isConnected = false;
-                return false;
-            }
-
-
+            
             if (!ReceiveData(clientSession, out headerByte, Marshal.SizeOf(typeof(CFHeader))))
             {
                 return false;
@@ -179,7 +172,7 @@ namespace ChatServer
                     }
                 case CFMessageType.Room_Join:
                     {
-                        Console.WriteLine("Room Join Request");
+                        Console.WriteLine("Room Join Request " + "room no:" + requestFromClient.roomNo);
                         requestHeader.type = FBMessageType.Room_Join;
                         break;
                     }

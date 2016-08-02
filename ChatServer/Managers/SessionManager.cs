@@ -52,28 +52,68 @@ namespace ChatServer
 
             return connectedSessions[sessionId];
         }
-
+// 
+//         public List<Session> GetTimeoutSessions()
+//         {
+//             if (connectedSessions.Count == 0)
+//                 return null;
+//             List<Session> timeoutSessions = new List<Session>();
+//             lock (connectedSessions)
+//             {
+//                 foreach (KeyValuePair<int, Session> item in connectedSessions)
+//                 {
+// 
+//                     if(Time item.Value.startTime) );
+//                 }
+//             }
+// 
+//             return timeoutSessions;
+//         }
         public List<Session> GetReadableSessions()
         {
+
+            if (connectedSessions.Count == 0)
+                return null;
             List<Session> readableSessions = new List<Session>();
+            List<Socket> sockets = new List<Socket>();
+            lock (connectedSessions)
+            {
+                foreach (KeyValuePair<int, Session> item in connectedSessions)
+                {
+                    sockets.Add(item.Value.Socket);
+                }
+            }
 
+            try
+            {
+                Socket.Select(sockets, null, null, 1000000);
+            }
+            catch(SocketException)
+            {
+                Console.WriteLine("");
+            }
 
-            //prevent sessions list edited by accepting process while this function is editing
+            if (sockets.Count <= 0)
+                return null;
             lock (connectedSessions)
             {
                 foreach (KeyValuePair<int, Session> item in connectedSessions)
                 {
                     Session session = item.Value;
                     Socket socket = session.Socket;
-                    
+
                     if (socket.Poll(10, SelectMode.SelectRead))
                     {
+                        if (socket.Available == 0)
+                            session.isConnected = false;
+
                         readableSessions.Add(session);
                     }
                 }
             }
+
             return readableSessions;
-        }
+        }            
 
         public void RemoveClosedSessions()
         {
@@ -107,13 +147,13 @@ namespace ChatServer
                 Console.WriteLine("Session pool is empty!");
             }
 
-            newSession.Init(socket);
+            newSession.Init(socket, 100000);
 
             lock (connectedSessions)
             {
                 int sessionId = idCount.Dequeue();
 
-                if(!connectedSessions.ContainsKey(sessionId + 1))
+                if(!connectedSessions.ContainsKey(sessionId + 1) && !idCount.Contains(sessionId + 1))
                 {
                     idCount.Enqueue(sessionId + 1);
                 }
@@ -134,7 +174,7 @@ namespace ChatServer
             {
                 if(connectedSessions.ContainsKey(session.sessionId))
                 {
-                    Console.WriteLine(session.Id +"(" + session.sessionId + ", " + session.Ip + ") has exit");
+                    Console.WriteLine(new string(session.Id) +"(" + session.sessionId + ", " + session.Ip + ") has exit");
 
                     connectedSessions.Remove(session.sessionId);
 
