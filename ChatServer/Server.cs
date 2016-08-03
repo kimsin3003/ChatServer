@@ -81,6 +81,7 @@ namespace ChatServer
                 }
 
                 backEndSession = SessionManager.GetInstance().MakeNewSession(backEndSock);
+
                 Console.WriteLine("Connected to BackEnd server");
                 return;
             }

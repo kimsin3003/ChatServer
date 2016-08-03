@@ -25,7 +25,11 @@ namespace ChatServer
         Room_List = 340,
         Room_Delete = 350,
 
-        Chat_Count = 410
+        Chat_Count = 410,
+
+        Health_Check = 510,
+
+        Connection_Info = 610
     };
 
     enum FBMessageState : short
