@@ -15,18 +15,13 @@ namespace ChatServer
         public int sessionId;
         public int roomNo;
         public bool isConnected;
-        private DateTime startTime;
-        private bool healthCheckSent;
+        private DateTime lastStartTime;
+        public bool isHealthCheckSent;
 
         public char[] Id
         {
             get { return id; }
         }
-
-//         public HealthCheckSend()
-//         {
-// 
-//         }
 
         public IPAddress Ip
         {
@@ -38,24 +33,25 @@ namespace ChatServer
             get { return socket; }
         }
 
-        public DateTime Time
+        public DateTime LastStartTime
         {
-            get { return startTime; }
+            get { return lastStartTime; }
         }
 
         public void ResetTimer()
         {
-            startTime = DateTime.Now;
+            lastStartTime = DateTime.Now;
         }
 
         public Session()
         {
-            startTime = default(DateTime);
+            lastStartTime = default(DateTime);
             socket = null;
             ip = null;
             isConnected = false;
             sessionId = -1;
             roomNo = -1;
+            isHealthCheckSent = false;
         }
 
         public void Init(Socket socket)
@@ -65,7 +61,7 @@ namespace ChatServer
             roomNo = -1;
             this.socket = socket;
             id = null;
-            startTime = DateTime.Now;
+            lastStartTime = DateTime.Now;
             ip = IPAddress.Parse(((IPEndPoint)socket.RemoteEndPoint).Address.ToString());
         }
         

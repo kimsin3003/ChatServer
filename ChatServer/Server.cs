@@ -18,9 +18,11 @@ namespace ChatServer
         private string backEndIp;
         private int backEndPort;
         private Session backEndSession;
+        private int port;
 
         public Server(int port, string backEndIp, int backEndPort, int maxClientNum)
         {
+            this.port = port;
             ipEndPoint = new IPEndPoint(IPAddress.Any, port);
             listenSock = null;
             backEndSession = null;
@@ -52,8 +54,6 @@ namespace ChatServer
         public void ConnectToBackEnd()
         {
             Console.WriteLine("Connecting To BackEnd Server...");
-            IPHostEntry ipHost = Dns.GetHostEntry(backEndIp);
-            IPAddress ipAddr = ipHost.AddressList[0];
             
             Socket backEndSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
@@ -61,6 +61,8 @@ namespace ChatServer
             {
                 try
                 {
+                    IPHostEntry ipHost = Dns.GetHostEntry(backEndIp);
+                    IPAddress ipAddr = ipHost.AddressList[0];
                     backEndSock.Connect(new IPEndPoint(ipAddr, backEndPort));
                 }
                 catch (ArgumentNullException)
@@ -114,6 +116,7 @@ namespace ChatServer
 
         public void Start()
         {
+            Console.WriteLine("Start Server. port: " + port);
             ConnectToBackEnd();
             StartListen();
             acceptingThread = new Thread(new ThreadStart(AcceptingProcess));
@@ -142,6 +145,27 @@ namespace ChatServer
 
         private void MainProcess()
         {
+            List<Session> timedoutSessions = SessionManager.GetInstance().GetTimedoutSessions();
+            foreach (Session session in timedoutSessions)
+            {
+                if (session.Socket == backEndSession.Socket)
+                {
+                    fbSessionProcessor.ProcessTimeoutSession(session);
+
+                    if (!session.isConnected)
+                    {
+                        Console.WriteLine("Backend Server is down");
+                        ConnectToBackEnd();
+                    }
+                }
+                else
+                {
+                    cfSessionProcessor.ProcessTimeoutSession(session, backEndSession);
+                }
+            }
+
+            SessionManager.GetInstance().RemoveClosedSessions();
+
             List<Session> readableSessions = SessionManager.GetInstance().GetReadableSessions();
             foreach (Session session in readableSessions)
             {

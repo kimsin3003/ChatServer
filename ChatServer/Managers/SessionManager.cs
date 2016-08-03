@@ -11,7 +11,8 @@ namespace ChatServer
         private Queue<Session> sessionPool;
         private Queue<int> idCount;
         static private SessionManager instance = null;
-        int servicePort;
+        private int servicePort;
+
 
         private SessionManager()
         {
@@ -25,12 +26,18 @@ namespace ChatServer
         public void Init(int maxSessionNum, int port)
         {
             sessionPool = new Queue<Session>(maxSessionNum);
+            servicePort = port;
 
             //set session pool
             for (int i = 0; i < maxSessionNum; i++)
             {
                 sessionPool.Enqueue(new Session());
             }
+        }
+
+        public int GetServicePort()
+        {
+            return servicePort;
         }
 
         static public SessionManager GetInstance()
@@ -52,6 +59,34 @@ namespace ChatServer
             }
 
             return connectedSessions[sessionId];
+        }
+
+        public List<Session> GetTimedoutSessions()
+        {
+            List<Session> timedOutSessions = new List<Session>();
+            lock (connectedSessions)
+            {
+                foreach(KeyValuePair<int,Session> item in connectedSessions)
+                {
+                    Session session = item.Value;
+                    if(session.isHealthCheckSent)
+                    {
+                        if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 10)
+                        {
+                            timedOutSessions.Add(session);
+                        }
+                    }
+                    else
+                    {
+                        if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 30)
+                        {
+                            timedOutSessions.Add(session);
+                        }
+                    }
+                }
+            }
+
+            return timedOutSessions;
         }
 
         public List<Session> GetReadableSessions()
@@ -158,7 +193,7 @@ namespace ChatServer
             {
                 if(connectedSessions.ContainsKey(session.sessionId))
                 {
-                    Console.WriteLine(session.Id +"(" + session.sessionId + ", " + session.Ip + ") has exit");
+                    Console.WriteLine(new string(session.Id) +"(" + session.sessionId + ", " + session.Ip + ") has exit");
 
                     connectedSessions.Remove(session.sessionId);
 

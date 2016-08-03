@@ -67,7 +67,7 @@ namespace ChatServer
 
         public void AddUserInRoom(Session userSession, int roomNo)
         {
-            Console.WriteLine(userSession.Id + " entered the room " + roomNo);
+            Console.WriteLine(new string(userSession.Id) + " entered the room " + roomNo);
             rooms[roomNo].chatters.Add(userSession);
             userSession.roomNo = roomNo;
         }

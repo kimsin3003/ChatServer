@@ -8,6 +8,27 @@ namespace ChatServer
     class FBSessionProcessor : SessionProcessor
     {
 
+        public void ProcessTimeoutSession(Session backEndSession)
+        {
+            if(backEndSession.isHealthCheckSent)
+            {
+                backEndSession.isConnected = false;
+            }
+            else
+            {
+                FBHeader header = new FBHeader();
+
+                header.type = FBMessageType.Health_Check;
+                header.state = FBMessageState.Request;
+                header.length = 0;
+                header.sessionId = backEndSession.sessionId;
+
+                byte[] headerByte = Serializer.StructureToByte(header);
+                SendData(backEndSession, headerByte);
+                backEndSession.isHealthCheckSent = true;
+                backEndSession.ResetTimer();
+            }
+        }
         public bool ProcessReadableSession(Session backEndSession)
         {
             Socket socket = backEndSession.Socket;
@@ -70,6 +91,8 @@ namespace ChatServer
                     break;
 
                 case FBMessageType.Health_Check:
+                    backEndSession.ResetTimer();
+                    backEndSession.isHealthCheckSent = false;
                     break;
 
                 case FBMessageType.Connection_Info:
@@ -110,9 +133,11 @@ namespace ChatServer
 
             foreach(IPAddress address in Dns.GetHostAddresses(Dns.GetHostName()))
             {
+                string s = address.ToString();
                 if (address.AddressFamily == AddressFamily.InterNetwork)
                 {
                     Array.Copy(address.ToString().ToCharArray(), ip, address.ToString().Length);
+                    break;
                 }
             }
 
@@ -120,20 +145,18 @@ namespace ChatServer
             header.type = FBMessageType.Connection_Info;
             header.state = FBMessageState.Success;
 
-            byte[] ipByte = Serializer.StringToBytes(new string(ip));
-            byte[] portByte = BitConverter.GetBytes(((IPEndPoint)backEndSession.Socket.LocalEndPoint).Port);
-            var data = new byte[ipByte.Length + portByte.Length];
+            FBConnectionInfo info = new FBConnectionInfo();
+            info.ip = ip;
+            info.port = SessionManager.GetInstance().GetServicePort();
 
-            ipByte.CopyTo(data, 0);
-            portByte.CopyTo(data, ipByte.Length);
-
-            header.length = data.Length;
+            byte[] body = Serializer.StructureToByte(info);
+            header.length = body.Length;
             header.sessionId = -1;
 
             byte[] headerByte = Serializer.StructureToByte(header);
             backEndSession.Socket.Send(headerByte);
 
-            backEndSession.Socket.Send(data);
+            backEndSession.Socket.Send(body);
         }
 
         private void SignupMessage(Session clientSession, FBHeader header, byte[] body)
@@ -208,8 +231,7 @@ namespace ChatServer
                     {
                         if (header.state == FBMessageState.Success)
                         {
-                            FBLoginResponseBody responseFromBackEnd = (FBLoginResponseBody)Serializer.ByteToStructure(body, typeof(FBLoginResponseBody));
-                            Console.WriteLine(new string(responseFromBackEnd.id) + " is logged out");
+                            Console.WriteLine(new string(clientSession.Id) + " is logged out");
                             clientSession.LogOut();
                             if(clientSession.IsInRoom())
                             {

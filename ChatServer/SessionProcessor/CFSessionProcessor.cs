@@ -8,16 +8,52 @@ namespace ChatServer
 {
     class CFSessionProcessor : SessionProcessor
     {
+        public void ProcessTimeoutSession(Session clientSession, Session backEndSession)
+        {
+            if (clientSession.isHealthCheckSent)
+            {
+                ConnectionCloseLogout(clientSession, backEndSession);
+            }
+            else
+            {
+                FBHeader header = new FBHeader();
+
+                header.type = FBMessageType.Health_Check;
+                header.state = FBMessageState.Request;
+                header.length = 0;
+                header.sessionId = clientSession.sessionId;
+
+                byte[] headerByte = Serializer.StructureToByte(header);
+                SendData(clientSession, headerByte);
+                clientSession.isHealthCheckSent = true;
+                clientSession.ResetTimer();
+            }
+        }
+
+        private void ConnectionCloseLogout(Session clientSession, Session backEndSession)
+        {
+            CFHeader fakeHeader = new CFHeader();
+            fakeHeader.type = CFMessageType.LogOut;
+            fakeHeader.state = CFMessageState.Request;
+            fakeHeader.length = Marshal.SizeOf(typeof(CFLoginRequestBody));
+
+            CFLoginRequestBody fakeBody = new CFLoginRequestBody();
+            fakeBody.id = clientSession.Id;
+
+            byte[] fakeBodyByte = Serializer.StructureToByte(fakeBody);
+
+            LoginMessage(clientSession, backEndSession, fakeHeader, fakeBodyByte);
+        }
+
         public bool ProcessReadableSession(Session clientSession, Session backEndSession)
         {
 
             if(clientSession.Socket.Available == 0)
             {
-//                 if(clientSession.IsLogedIn())
-//                 {
-//                     FBHeader  = new FBHeader();
-//                     header.
-//                 }
+                if(clientSession.IsLogedIn())
+                {
+                    ConnectionCloseLogout(clientSession, backEndSession);
+                }
 
                 clientSession.isConnected = false;
 
@@ -50,7 +86,7 @@ namespace ChatServer
 
         
 
-        private void ProcessMessage(Session session, Session backEndSession, CFHeader header, byte[] body)
+        private void ProcessMessage(Session clientSession, Session backEndSession, CFHeader header, byte[] body)
         {
             CFMessageType type = header.type;
             int bodyLength = header.length;
@@ -58,28 +94,33 @@ namespace ChatServer
             switch (type)
             {
                 case CFMessageType.Signup:
-                    SignUpMessage(session, backEndSession, header, body);
+                    SignUpMessage(clientSession, backEndSession, header, body);
                     break;
                 case CFMessageType.Id_Dup:
                 case CFMessageType.Login:
                 case CFMessageType.LogOut:
-                    LoginMessage(session, backEndSession, header, body);
+                    LoginMessage(clientSession, backEndSession, header, body);
                     break;
                 case CFMessageType.Room_Create:
                 case CFMessageType.Room_Join:
                 case CFMessageType.Room_Leave:
                 case CFMessageType.Room_List:
-                    RoomMessage(session, backEndSession, header, body);
+                    RoomMessage(clientSession, backEndSession, header, body);
                     break;
                 case CFMessageType.Chat_MSG_From_Client:
                 case CFMessageType.Chat_MSG_Broadcast:
-                    ChatMassage(session, backEndSession, header, body);
+                    ChatMassage(clientSession, backEndSession, header, body);
+                    break;
+                case CFMessageType.Health_Check:
+                    clientSession.ResetTimer();
+                    clientSession.isHealthCheckSent = false;
                     break;
                 default:
                     Console.WriteLine("Undefined Message Type");
                     break;
             }
         }
+        
         private void SignUpMessage(Session clientSession, Session backEndSession, CFHeader header, byte[] body)
         {
             FBHeader requestHeader = new FBHeader();
@@ -231,7 +272,6 @@ namespace ChatServer
                 CFHeader responseHeader = new CFHeader();
                 responseHeader.type = header.type;
                 responseHeader.state = CFMessageState.Fail;
-
                 responseHeader.length = body.Length;
 
                 byte[] failHeaderByte = Serializer.StructureToByte(responseHeader);
