@@ -10,6 +10,20 @@ namespace ChatServer
     {
         public bool ProcessReadableSession(Session clientSession, Session backEndSession)
         {
+
+            if(clientSession.Socket.Available == 0)
+            {
+//                 if(clientSession.IsLogedIn())
+//                 {
+//                     FBHeader  = new FBHeader();
+//                     header.
+//                 }
+
+                clientSession.isConnected = false;
+
+                return false;
+            }
+
             Socket socket = clientSession.Socket;
             IPAddress ipAddress = clientSession.Ip;
 
@@ -17,7 +31,6 @@ namespace ChatServer
             byte[] headerByte;
             byte[] body;
             int bodyLength;
-            
             if (!ReceiveData(clientSession, out headerByte, Marshal.SizeOf(typeof(CFHeader))))
             {
                 return false;
@@ -34,6 +47,8 @@ namespace ChatServer
 
             return true;
         }
+
+        
 
         private void ProcessMessage(Session session, Session backEndSession, CFHeader header, byte[] body)
         {

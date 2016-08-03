@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Protocol\CFProtocol\CFSignupRequestBody.cs" />
     <Compile Include="Protocol\CFProtocol\CFSignupResponseBody.cs" />
+    <Compile Include="Protocol\FBProtocol\FBConnectionInfoBody.cs" />
     <Compile Include="Protocol\FBProtocol\FBSignupRequestBody.cs" />
     <Compile Include="Protocol\FBProtocol\FBSignupResponseBody.cs" />
     <Compile Include="SessionProcessor\CFSessionProcessor.cs" />

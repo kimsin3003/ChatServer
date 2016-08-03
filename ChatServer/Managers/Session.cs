@@ -23,10 +23,10 @@ namespace ChatServer
             get { return id; }
         }
 
-        public HealthCheckSend()
-        {
-
-        }
+//         public HealthCheckSend()
+//         {
+// 
+//         }
 
         public IPAddress Ip
         {
@@ -58,7 +58,7 @@ namespace ChatServer
             roomNo = -1;
         }
 
-        public void Init(Socket socket, double healthCheckTimeLimit)
+        public void Init(Socket socket)
         {
             isConnected = false;
             sessionId = -1;

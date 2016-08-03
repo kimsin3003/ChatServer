@@ -143,9 +143,7 @@ namespace ChatServer
         private void MainProcess()
         {
             List<Session> readableSessions = SessionManager.GetInstance().GetReadableSessions();
-
-            if (readableSessions == null)
-                return;
+            
             foreach (Session session in readableSessions)
             {
 
