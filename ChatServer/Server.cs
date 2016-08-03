@@ -145,6 +145,12 @@ namespace ChatServer
 
         private void MainProcess()
         {
+            HealthCheckProcess();
+            ReadProcess();
+        }
+
+        private void HealthCheckProcess()
+        {
             List<Session> timedoutSessions = SessionManager.GetInstance().GetTimedoutSessions();
             foreach (Session session in timedoutSessions)
             {
@@ -163,9 +169,11 @@ namespace ChatServer
                     cfSessionProcessor.ProcessTimeoutSession(session, backEndSession);
                 }
             }
-
             SessionManager.GetInstance().RemoveClosedSessions();
+        }
 
+        private void ReadProcess()
+        {
             List<Session> readableSessions = SessionManager.GetInstance().GetReadableSessions();
             foreach (Session session in readableSessions)
             {

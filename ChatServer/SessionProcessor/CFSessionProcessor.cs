@@ -10,23 +10,23 @@ namespace ChatServer
     {
         public void ProcessTimeoutSession(Session clientSession, Session backEndSession)
         {
-            if (clientSession.isHealthCheckSent)
+            if (!clientSession.isHealthCheckSent)
             {
-                ConnectionCloseLogout(clientSession, backEndSession);
-            }
-            else
-            {
-                FBHeader header = new FBHeader();
+                CFHeader header = new CFHeader();
 
-                header.type = FBMessageType.Health_Check;
-                header.state = FBMessageState.Request;
+                header.type = CFMessageType.Health_Check;
+                header.state = CFMessageState.Request;
                 header.length = 0;
-                header.sessionId = clientSession.sessionId;
 
                 byte[] headerByte = Serializer.StructureToByte(header);
                 SendData(clientSession, headerByte);
-                clientSession.isHealthCheckSent = true;
                 clientSession.ResetTimer();
+                clientSession.isHealthCheckSent = true;
+            }
+            else
+            {
+                ConnectionCloseLogout(clientSession, backEndSession);
+                clientSession.isConnected = false;
             }
         }
 
@@ -113,7 +113,7 @@ namespace ChatServer
                     break;
                 case CFMessageType.Health_Check:
                     clientSession.ResetTimer();
-                    clientSession.isHealthCheckSent = false;
+                    clientSession.healthCheckCount = 0;
                     break;
                 default:
                     Console.WriteLine("Undefined Message Type");
@@ -257,7 +257,7 @@ namespace ChatServer
 
 
             FBRoomRequestBody requestBody = new FBRoomRequestBody();
-            requestBody.id = requestFromClient.id;
+            requestBody.id = clientSession.Id;
             requestBody.roomNo = requestFromClient.roomNo;
 
             byte[] bodyByte = Serializer.StructureToByte(requestBody);

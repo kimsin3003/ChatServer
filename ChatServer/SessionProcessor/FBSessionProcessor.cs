@@ -10,11 +10,7 @@ namespace ChatServer
 
         public void ProcessTimeoutSession(Session backEndSession)
         {
-            if(backEndSession.isHealthCheckSent)
-            {
-                backEndSession.isConnected = false;
-            }
-            else
+            if(!backEndSession.isHealthCheckSent)
             {
                 FBHeader header = new FBHeader();
 
@@ -25,8 +21,12 @@ namespace ChatServer
 
                 byte[] headerByte = Serializer.StructureToByte(header);
                 SendData(backEndSession, headerByte);
-                backEndSession.isHealthCheckSent = true;
+                backEndSession.healthCheckCount = 0;
                 backEndSession.ResetTimer();
+            }
+            else
+            {
+                backEndSession.isConnected = false;
             }
         }
         public bool ProcessReadableSession(Session backEndSession)
@@ -68,31 +68,31 @@ namespace ChatServer
 
         private void ProcessMessage(Session backEndSession, FBHeader header, byte[] body)
         {
-            Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
             FBMessageType type = header.type;
             int bodyLength = header.length;
 
             switch (type)
             {
                 case FBMessageType.Signup:
-                    SignupMessage(clientSession, header, body);
+                    SignupMessage(header, body);
                     break;
                 case FBMessageType.Id_Dup:
                 case FBMessageType.Login:
                 case FBMessageType.LogOut:
-                    LoginMessage(clientSession, header, body);
+                    LoginMessage(header, body);
                     break;
                 case FBMessageType.Room_Create:
                 case FBMessageType.Room_Join:
                 case FBMessageType.Room_Leave:
                 case FBMessageType.Room_List:
                 case FBMessageType.Room_Delete:
-                    RoomMessage(clientSession, header, body);
+                    RoomMessage(header, body);
                     break;
 
                 case FBMessageType.Health_Check:
                     backEndSession.ResetTimer();
                     backEndSession.isHealthCheckSent = false;
+                    backEndSession.healthCheckCount = 0;
                     break;
 
                 case FBMessageType.Connection_Info:
@@ -159,9 +159,10 @@ namespace ChatServer
             backEndSession.Socket.Send(body);
         }
 
-        private void SignupMessage(Session clientSession, FBHeader header, byte[] body)
+        private void SignupMessage(FBHeader header, byte[] body)
         {
 
+            Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
             CFHeader requestHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)
@@ -187,9 +188,9 @@ namespace ChatServer
             
         }
 
-        private void LoginMessage(Session clientSession, FBHeader header, byte[] body)
+        private void LoginMessage(FBHeader header, byte[] body)
         {
-
+            Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
             CFHeader responseHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)
@@ -255,9 +256,9 @@ namespace ChatServer
         }
 
 
-        private void RoomMessage(Session clientSession, FBHeader header, byte[] body)
+        private void RoomMessage(FBHeader header, byte[] body)
         {
-
+            Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
             CFHeader requestHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)

@@ -17,6 +17,7 @@ namespace ChatServer
         public bool isConnected;
         private DateTime lastStartTime;
         public bool isHealthCheckSent;
+        public int healthCheckCount;
 
         public char[] Id
         {
@@ -52,6 +53,7 @@ namespace ChatServer
             sessionId = -1;
             roomNo = -1;
             isHealthCheckSent = false;
+            healthCheckCount = 0;
         }
 
         public void Init(Socket socket)
@@ -62,6 +64,8 @@ namespace ChatServer
             this.socket = socket;
             id = null;
             lastStartTime = DateTime.Now;
+            isHealthCheckSent = false;
+            healthCheckCount = 0;
             ip = IPAddress.Parse(((IPEndPoint)socket.RemoteEndPoint).Address.ToString());
         }
         

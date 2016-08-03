@@ -64,24 +64,36 @@ namespace ChatServer
         public List<Session> GetTimedoutSessions()
         {
             List<Session> timedOutSessions = new List<Session>();
+            IDictionary<int, Session> temp;
             lock (connectedSessions)
             {
-                foreach(KeyValuePair<int,Session> item in connectedSessions)
+                temp = new Dictionary<int, Session>(connectedSessions);
+            }
+
+            foreach (KeyValuePair<int,Session> item in temp)
+            {
+                Session session = item.Value;
+                if (session.isHealthCheckSent)
                 {
-                    Session session = item.Value;
-                    if(session.isHealthCheckSent)
+                    if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 2)
                     {
-                        if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 10)
+                        if (session.healthCheckCount > 3)
                         {
                             timedOutSessions.Add(session);
+                        }
+                        else
+                        {
+                            session.healthCheckCount++;
                         }
                     }
-                    else
+                }
+                else
+                {
+                    if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 3)
                     {
-                        if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 30)
-                        {
-                            timedOutSessions.Add(session);
-                        }
+                        session.isHealthCheckSent = true;
+                        session.healthCheckCount++;
+                        timedOutSessions.Add(session);
                     }
                 }
             }
@@ -172,7 +184,7 @@ namespace ChatServer
             {
                 int sessionId = idCount.Dequeue();
 
-                if(!connectedSessions.ContainsKey(sessionId + 1))
+                if (!connectedSessions.ContainsKey(sessionId + 1) && !idCount.Contains(sessionId + 1))
                 {
                     idCount.Enqueue(sessionId + 1);
                 }
