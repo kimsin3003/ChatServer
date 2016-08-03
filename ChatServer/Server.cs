@@ -142,25 +142,26 @@ namespace ChatServer
         private void MainProcess()
         {
             List<Session> readableSessions = SessionManager.GetInstance().GetReadableSessions();
-
-            if (readableSessions == null)
-                return;
-            foreach (Session session in readableSessions)
+            
+            if(readableSessions.Count > 0)
             {
-
-                if (session.Socket == backEndSession.Socket)
+                foreach (Session session in readableSessions)
                 {
-                    fbSessionProcessor.ProcessReadableSession(session);
 
-                    if (!session.isConnected)
+                    if (session.Socket == backEndSession.Socket)
                     {
-                        Console.WriteLine("Backend Server is down");
-                        ConnectToBackEnd();
+                        fbSessionProcessor.ProcessReadableSession(session);
+
+                        if (!session.isConnected)
+                        {
+                            Console.WriteLine("Backend Server is down");
+                            ConnectToBackEnd();
+                        }
                     }
-                }
-                else
-                {
-                    cfSessionProcessor.ProcessReadableSession(session, backEndSession);
+                    else
+                    {
+                        cfSessionProcessor.ProcessReadableSession(session, backEndSession);
+                    }
                 }
             }
 

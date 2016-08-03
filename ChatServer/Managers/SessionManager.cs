@@ -71,9 +71,9 @@ namespace ChatServer
 //         }
         public List<Session> GetReadableSessions()
         {
-
-            if (connectedSessions.Count == 0)
-                return null;
+// 
+//             if (connectedSessions.Count == 0)
+//                 return null;
             List<Session> readableSessions = new List<Session>();
             List<Socket> sockets = new List<Socket>();
             lock (connectedSessions)
@@ -92,22 +92,25 @@ namespace ChatServer
             {
                 Console.WriteLine("");
             }
-
-            if (sockets.Count <= 0)
-                return null;
-            lock (connectedSessions)
+            catch (Exception e)
             {
-                foreach (KeyValuePair<int, Session> item in connectedSessions)
+                Console.WriteLine(e.Message);
+            }
+
+            if (sockets.Count > 0)
+            {
+                lock (connectedSessions)
                 {
-                    Session session = item.Value;
-                    Socket socket = session.Socket;
-
-                    if (socket.Poll(10, SelectMode.SelectRead))
+                    foreach (KeyValuePair<int, Session> item in connectedSessions)
                     {
-                        if (socket.Available == 0)
-                            session.isConnected = false;
+                        Session session = item.Value;
+                        Socket socket = session.Socket;
 
-                        readableSessions.Add(session);
+                        if (socket.Poll(10, SelectMode.SelectRead))
+                        {
+
+                            readableSessions.Add(session);
+                        }
                     }
                 }
             }

@@ -18,6 +18,12 @@ namespace ChatServer
             byte[] body;
             int bodyLength;
 
+            if (socket.Available == 0)
+            {
+                backEndSession.isConnected = false;
+                return false;
+            }
+
             if (!ReceiveData(backEndSession, out headerByte, Marshal.SizeOf(typeof(FBHeader))))
             {
                 backEndSession.LogOut();
