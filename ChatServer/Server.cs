@@ -25,7 +25,7 @@ namespace ChatServer
             listenSock = null;
             backEndSession = null;
             this.maxClientNum = maxClientNum;
-            SessionManager.GetInstance().Init(maxClientNum);
+            SessionManager.GetInstance().Init(maxClientNum, port);
             fbSessionProcessor = new FBSessionProcessor();
             cfSessionProcessor = new CFSessionProcessor();
 

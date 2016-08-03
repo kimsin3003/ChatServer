@@ -11,6 +11,7 @@ namespace ChatServer
         private Queue<Session> sessionPool;
         private Queue<int> idCount;
         static private SessionManager instance = null;
+        int servicePort;
 
         private SessionManager()
         {
@@ -21,7 +22,7 @@ namespace ChatServer
 
         }
 
-        public void Init(int maxSessionNum)
+        public void Init(int maxSessionNum, int port)
         {
             sessionPool = new Queue<Session>(maxSessionNum);
 
@@ -56,29 +57,48 @@ namespace ChatServer
         public List<Session> GetReadableSessions()
         {
             List<Session> readableSessions = new List<Session>();
-
-
-            //prevent sessions list edited by accepting process while this function is editing
+            List<Socket> sockets = new List<Socket>();
             lock (connectedSessions)
             {
                 foreach (KeyValuePair<int, Session> item in connectedSessions)
                 {
-                    Session session = item.Value;
-                    Socket socket = session.Socket;
+                    sockets.Add(item.Value.Socket);
+                }
+            }
 
-                    try
+            try
+            {
+                Socket.Select(sockets, null, null, 1000000);
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            if (sockets.Count > 0)
+            {
+                lock (connectedSessions)
+                {
+                    foreach (KeyValuePair<int, Session> item in connectedSessions)
                     {
-                        if (socket.Poll(1000, SelectMode.SelectRead))
+                        Session session = item.Value;
+                        Socket socket = session.Socket;
+
+                        if (socket.Poll(10, SelectMode.SelectRead))
                         {
+                            if (socket.Available == 0)
+                                session.isConnected = false;
+
                             readableSessions.Add(session);
                         }
                     }
-                    catch(SocketException)
-                    {
-                        session.isConnected = false;
-                    }
                 }
             }
+
             return readableSessions;
         }
 

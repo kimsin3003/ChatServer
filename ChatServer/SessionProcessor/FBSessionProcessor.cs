@@ -106,7 +106,7 @@ namespace ChatServer
             {
                 if (address.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    Array.Copy(address.ToString().ToCharArray(), ip, ip.Length);
+                    Array.Copy(address.ToString().ToCharArray(), ip, address.ToString().Length);
                 }
             }
 
