@@ -11,6 +11,7 @@ namespace ChatServer
         private Queue<Session> sessionPool;
         private Queue<int> idCount;
         static private SessionManager instance = null;
+        int servicePort;
 
         private SessionManager()
         {
@@ -21,7 +22,7 @@ namespace ChatServer
 
         }
 
-        public void Init(int maxSessionNum)
+        public void Init(int maxSessionNum, int port)
         {
             sessionPool = new Queue<Session>(maxSessionNum);
 
@@ -52,28 +53,9 @@ namespace ChatServer
 
             return connectedSessions[sessionId];
         }
-// 
-//         public List<Session> GetTimeoutSessions()
-//         {
-//             if (connectedSessions.Count == 0)
-//                 return null;
-//             List<Session> timeoutSessions = new List<Session>();
-//             lock (connectedSessions)
-//             {
-//                 foreach (KeyValuePair<int, Session> item in connectedSessions)
-//                 {
-// 
-//                     if(Time item.Value.startTime) );
-//                 }
-//             }
-// 
-//             return timeoutSessions;
-//         }
+
         public List<Session> GetReadableSessions()
         {
-// 
-//             if (connectedSessions.Count == 0)
-//                 return null;
             List<Session> readableSessions = new List<Session>();
             List<Socket> sockets = new List<Socket>();
             lock (connectedSessions)
@@ -88,7 +70,7 @@ namespace ChatServer
             {
                 Socket.Select(sockets, null, null, 1000000);
             }
-            catch(SocketException)
+            catch (SocketException)
             {
                 Console.WriteLine("");
             }
@@ -108,7 +90,6 @@ namespace ChatServer
 
                         if (socket.Poll(10, SelectMode.SelectRead))
                         {
-
                             readableSessions.Add(session);
                         }
                     }
@@ -116,7 +97,7 @@ namespace ChatServer
             }
 
             return readableSessions;
-        }            
+        }
 
         public void RemoveClosedSessions()
         {
@@ -150,13 +131,13 @@ namespace ChatServer
                 Console.WriteLine("Session pool is empty!");
             }
 
-            newSession.Init(socket, 100000);
+            newSession.Init(socket);
 
             lock (connectedSessions)
             {
                 int sessionId = idCount.Dequeue();
 
-                if(!connectedSessions.ContainsKey(sessionId + 1) && !idCount.Contains(sessionId + 1))
+                if(!connectedSessions.ContainsKey(sessionId + 1))
                 {
                     idCount.Enqueue(sessionId + 1);
                 }
@@ -177,7 +158,7 @@ namespace ChatServer
             {
                 if(connectedSessions.ContainsKey(session.sessionId))
                 {
-                    Console.WriteLine(new string(session.Id) +"(" + session.sessionId + ", " + session.Ip + ") has exit");
+                    Console.WriteLine(session.Id +"(" + session.sessionId + ", " + session.Ip + ") has exit");
 
                     connectedSessions.Remove(session.sessionId);
 

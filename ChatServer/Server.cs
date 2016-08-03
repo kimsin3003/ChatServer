@@ -25,7 +25,7 @@ namespace ChatServer
             listenSock = null;
             backEndSession = null;
             this.maxClientNum = maxClientNum;
-            SessionManager.GetInstance().Init(maxClientNum);
+            SessionManager.GetInstance().Init(maxClientNum, port);
             fbSessionProcessor = new FBSessionProcessor();
             cfSessionProcessor = new CFSessionProcessor();
 
@@ -81,6 +81,7 @@ namespace ChatServer
                 }
 
                 backEndSession = SessionManager.GetInstance().MakeNewSession(backEndSock);
+
                 Console.WriteLine("Connected to BackEnd server");
                 return;
             }
@@ -142,26 +143,21 @@ namespace ChatServer
         private void MainProcess()
         {
             List<Session> readableSessions = SessionManager.GetInstance().GetReadableSessions();
-            
-            if(readableSessions.Count > 0)
+            foreach (Session session in readableSessions)
             {
-                foreach (Session session in readableSessions)
+                if (session.Socket == backEndSession.Socket)
                 {
+                    fbSessionProcessor.ProcessReadableSession(session);
 
-                    if (session.Socket == backEndSession.Socket)
+                    if (!session.isConnected)
                     {
-                        fbSessionProcessor.ProcessReadableSession(session);
-
-                        if (!session.isConnected)
-                        {
-                            Console.WriteLine("Backend Server is down");
-                            ConnectToBackEnd();
-                        }
+                        Console.WriteLine("Backend Server is down");
+                        ConnectToBackEnd();
                     }
-                    else
-                    {
-                        cfSessionProcessor.ProcessReadableSession(session, backEndSession);
-                    }
+                }
+                else
+                {
+                    cfSessionProcessor.ProcessReadableSession(session, backEndSession);
                 }
             }
 

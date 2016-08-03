@@ -40,14 +40,14 @@ namespace ChatServer
                 return false;
             }
 
-            Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
 
-            ProcessMessage(clientSession, header, body);
+            ProcessMessage(backEndSession, header, body);
             return true;
         }
 
-        private void ProcessMessage(Session clientSession, FBHeader header, byte[] body)
+        private void ProcessMessage(Session backEndSession, FBHeader header, byte[] body)
         {
+            Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
             FBMessageType type = header.type;
             int bodyLength = header.length;
 
@@ -68,10 +68,72 @@ namespace ChatServer
                 case FBMessageType.Room_Delete:
                     RoomMessage(clientSession, header, body);
                     break;
+
+                case FBMessageType.Health_Check:
+                    break;
+
+                case FBMessageType.Connection_Info:
+                    ConnectionInfo(backEndSession);
+                    break;
                 default:
                     Console.WriteLine("Undefined Message Type");
                     break;
             }
+        }
+
+        private void HealthCheck(Session backEndSession, FBHeader header)
+        {
+
+            if (header.state == FBMessageState.Request)
+            {
+                FBHeader requestHeader = new FBHeader();
+                Console.WriteLine("Signup Success");
+                requestHeader.state = FBMessageState.Success;
+                requestHeader.sessionId = header.sessionId;
+                requestHeader.type = FBMessageType.Health_Check;
+                requestHeader.length = 0;
+
+
+                byte[] headerByte = Serializer.StructureToByte(requestHeader);
+                SendData(backEndSession, headerByte);
+            }
+            else
+            {
+                backEndSession.ResetTimer();
+                return;
+            }
+        }
+
+        private void ConnectionInfo(Session backEndSession)
+         {
+            char[] ip = new char[15];
+
+            foreach(IPAddress address in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    Array.Copy(address.ToString().ToCharArray(), ip, address.ToString().Length);
+                }
+            }
+
+            FBHeader header = new FBHeader();
+            header.type = FBMessageType.Connection_Info;
+            header.state = FBMessageState.Success;
+
+            byte[] ipByte = Serializer.StringToBytes(new string(ip));
+            byte[] portByte = BitConverter.GetBytes(((IPEndPoint)backEndSession.Socket.LocalEndPoint).Port);
+            var data = new byte[ipByte.Length + portByte.Length];
+
+            ipByte.CopyTo(data, 0);
+            portByte.CopyTo(data, ipByte.Length);
+
+            header.length = data.Length;
+            header.sessionId = -1;
+
+            byte[] headerByte = Serializer.StructureToByte(header);
+            backEndSession.Socket.Send(headerByte);
+
+            backEndSession.Socket.Send(data);
         }
 
         private void SignupMessage(Session clientSession, FBHeader header, byte[] body)

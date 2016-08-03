@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Sockets;
 
 namespace ChatServer
@@ -14,12 +15,18 @@ namespace ChatServer
         public int sessionId;
         public int roomNo;
         public bool isConnected;
-        public double startTime;
+        private DateTime startTime;
+        private bool healthCheckSent;
 
         public char[] Id
         {
             get { return id; }
         }
+
+//         public HealthCheckSend()
+//         {
+// 
+//         }
 
         public IPAddress Ip
         {
@@ -31,14 +38,19 @@ namespace ChatServer
             get { return socket; }
         }
 
-        public double Time
+        public DateTime Time
         {
             get { return startTime; }
         }
 
+        public void ResetTimer()
+        {
+            startTime = DateTime.Now;
+        }
+
         public Session()
         {
-            startTime = 0;
+            startTime = default(DateTime);
             socket = null;
             ip = null;
             isConnected = false;
@@ -46,14 +58,14 @@ namespace ChatServer
             roomNo = -1;
         }
 
-        public void Init(Socket socket, double healthCheckTimeLimit)
+        public void Init(Socket socket)
         {
             isConnected = false;
             sessionId = -1;
             roomNo = -1;
             this.socket = socket;
             id = null;
-            startTime = healthCheckTimeLimit;
+            startTime = DateTime.Now;
             ip = IPAddress.Parse(((IPEndPoint)socket.RemoteEndPoint).Address.ToString());
         }
         
