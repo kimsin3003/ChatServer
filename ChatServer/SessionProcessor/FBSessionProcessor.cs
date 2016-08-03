@@ -99,13 +99,28 @@ namespace ChatServer
         }
 
         private void ConnectionInfo(Session backEndSession)
-        {
-            string ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[0].ToString();
+         {
+            char[] ip = new char[13];
+
+            foreach(IPAddress address in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    Array.Copy(address.ToString().ToCharArray(), ip, ip.Length);
+                }
+            }
 
             FBHeader header = new FBHeader();
             header.type = FBMessageType.Connection_Info;
             header.state = FBMessageState.Success;
-            byte[] data = Serializer.StringToBytes(ip);
+
+            byte[] ipByte = Serializer.StringToBytes(ip.ToString());
+            byte[] portByte = BitConverter.GetBytes(((IPEndPoint)backEndSession.Socket.LocalEndPoint).Port);
+            var data = new byte[ipByte.Length + portByte.Length];
+
+            ipByte.CopyTo(data, 0);
+            portByte.CopyTo(data, ipByte.Length);
+
             header.length = data.Length;
             header.sessionId = -1;
 

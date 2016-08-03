@@ -68,7 +68,7 @@ namespace ChatServer
 
                     try
                     {
-                        if (socket.Poll(10, SelectMode.SelectRead))
+                        if (socket.Poll(1000, SelectMode.SelectRead))
                         {
                             readableSessions.Add(session);
                         }
