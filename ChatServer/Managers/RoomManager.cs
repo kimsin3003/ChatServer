@@ -50,8 +50,14 @@ namespace ChatServer
 
         public void RemoveRoom(int roomNo)
         {
-            rooms.Remove(roomNo);
-            Console.WriteLine("Room " + roomNo + " is removed");
+            if(rooms.Remove(roomNo))
+            {
+                Console.WriteLine("Room " + roomNo + " is removed");
+            }
+            else
+            {
+                Console.WriteLine("Room " + roomNo + " doesn't exist");
+            }
         }
 
         public List<Session> GetUsersInRoom(int roomNo)
@@ -75,7 +81,7 @@ namespace ChatServer
 
         public void RemoveUserInRoom(Session userSession)
         {
-            Console.WriteLine(userSession.Id + " went out the room " + userSession.roomNo);
+            Console.WriteLine(new string(userSession.Id) + " went out the room " + userSession.roomNo);
             rooms[userSession.roomNo].chatters.Remove(userSession);
             userSession.roomNo = -1;
         }

@@ -191,6 +191,11 @@ namespace ChatServer
         private void LoginMessage(FBHeader header, byte[] body)
         {
             Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
+            if(clientSession == null)
+            {
+                Console.WriteLine("Already Logged Out");
+                return;
+            }
             CFHeader responseHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)
@@ -292,7 +297,8 @@ namespace ChatServer
                         if (header.state == FBMessageState.Success)
                         {
                             Console.WriteLine("Room Delete Success");
-                            RoomManager.GetInstance().RemoveRoom(clientSession.roomNo);
+                            int roomNo = BitConverter.ToInt32(body, 0);
+                            RoomManager.GetInstance().RemoveRoom(roomNo);
                         }
                         requestHeader.type = CFMessageType.Room_Delete;
                         break;
@@ -305,6 +311,11 @@ namespace ChatServer
                             int roomNo = BitConverter.ToInt32(body, 0);
                             RoomManager.GetInstance().AddUserInRoom(clientSession, roomNo);
                         }
+                        else if (header.state == FBMessageState.Fail)
+                        {
+                            Console.WriteLine("Room Join Fail");
+                        }
+
                         requestHeader.type = CFMessageType.Room_Join;
                         break;
                     }

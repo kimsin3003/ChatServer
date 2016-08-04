@@ -17,10 +17,7 @@ namespace ChatServer
             buf = new byte[size];
             try
             {
-                if(session.Socket.Receive(buf) == 0)
-                {
-                    return false;
-                }
+                session.Socket.Receive(buf);
             }
             catch (SocketException)
             {
@@ -41,6 +38,11 @@ namespace ChatServer
                 session.Socket.Send(buf);
             }
             catch (SocketException)
+            {
+                session.LogOut();
+                return false;
+            }
+            catch (ObjectDisposedException)
             {
                 session.LogOut();
                 return false;

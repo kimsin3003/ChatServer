@@ -83,8 +83,6 @@ namespace ChatServer
 
         public void LogOut()
         {
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
             id = null;
         }
 

@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Protocol\CFProtocol\CFChatResponseBody.cs" />
     <Compile Include="Protocol\CFProtocol\CFSignupRequestBody.cs" />
     <Compile Include="Protocol\CFProtocol\CFSignupResponseBody.cs" />
     <Compile Include="Protocol\CFProtocol\CFJoinFailBody.cs" />
@@ -56,7 +57,7 @@
     <Compile Include="Protocol\CFProtocol\CFHeader.cs" />
     <Compile Include="Protocol\CFProtocol\CFRoomRequestBody.cs" />
     <Compile Include="Protocol\CFProtocol\CFRoomResponseBody.cs" />
-    <Compile Include="Protocol\CFProtocol\CFChatBody.cs" />
+    <Compile Include="Protocol\CFProtocol\CFChatRequestBody.cs" />
     <Compile Include="Protocol\FBProtocol\FBChatRequestBody.cs" />
     <Compile Include="Protocol\FBProtocol\FBHeader.cs" />
     <Compile Include="Protocol\FBProtocol\FBLoginRequestBody.cs" />

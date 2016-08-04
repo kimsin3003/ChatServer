@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace ChatServer
 {
-    struct CFChatBody
+    struct CFChatRequestBody
     {
         public byte[] data;// data can be : chat Room List, FE IP-PORT, chat room no 
     }

@@ -75,7 +75,7 @@ namespace ChatServer
                 Session session = item.Value;
                 if (session.isHealthCheckSent)
                 {
-                    if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 2)
+                    if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 5)
                     {
                         if (session.healthCheckCount > 3)
                         {
@@ -84,14 +84,14 @@ namespace ChatServer
                         else
                         {
                             session.healthCheckCount++;
+                            session.ResetTimer();
                         }
                     }
                 }
                 else
                 {
-                    if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 3)
+                    if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 30)
                     {
-                        session.isHealthCheckSent = true;
                         session.healthCheckCount++;
                         timedOutSessions.Add(session);
                     }
@@ -119,7 +119,7 @@ namespace ChatServer
             }
             catch (SocketException)
             {
-                Console.WriteLine("");
+                Console.WriteLine("Socket Already Closed");
             }
             catch (Exception e)
             {
