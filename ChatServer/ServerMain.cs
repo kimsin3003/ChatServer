@@ -1,89 +1,56 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace ChatServer
 {
     class ServerMain
     {
         
-        [DllImport("Kernel32")]
-        public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
         
-        public delegate bool HandlerRoutine(CtrlTypes CtrlType);
-        
-        public enum CtrlTypes
-        {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT,
-            CTRL_CLOSE_EVENT,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT
-        }
-
         static void Main(string[] args)
         {
-            Console.Title = "Chat Server " + Int32.Parse(args[0]);
-            Console.ForegroundColor = ConsoleColor.Green;
-            if (args.Length == 1 && args[0] == "-help")
+
+            try
             {
-                Console.WriteLine("port ");
-                return;
-            }
+                Console.Title = "Chat Server " + Int32.Parse(args[0]);
+                Console.ForegroundColor = ConsoleColor.Green;
+                if (args.Length == 1 && args[0] == "-help")
+                {
+                    Console.WriteLine("listeningPort backEndIp backEndPort maxClientNum");
+                    return;
+                }
 
-            if (args.Length == 0)
+                if (args.Length == 0)
+                {
+                    Console.WriteLine("listeningPort backEndIp backEndPort maxClientNum");
+                    return;
+                }
+
+                Thread exitInputThread = new Thread(new ThreadStart(ExitInput));
+                exitInputThread.Start();
+                Console.WriteLine("To Exit, Press ESCAPE.");
+                Console.WriteLine("In other way, there's no prove for complete exit and sending FIN");
+                Server server = new Server(Int32.Parse(args[0]), args[1], Int32.Parse(args[2]), Int32.Parse(args[3]));
+                server.Start();
+                server.ShutDown();
+            }
+            catch(Exception e)
             {
-                Console.WriteLine("not enough argumensts");
-                return;
+                Environment.Exit(0);
             }
+            finally
+            {
+                Environment.Exit(0);
+            }
+        }
 
+        private static void ExitInput()
+        {
+            ConsoleKeyInfo input = Console.ReadKey(false);
 
-            SetConsoleCtrlHandler(ConsoleCtrlCheck, true);
-            Server server = new Server(Int32.Parse(args[0]), "10.100.58.3", 25389, 100);
-            server.Start();
-            server.ShutDown();
-
-            
+            if ((input.Key & ConsoleKey.Escape) != 0)
+                Environment.Exit(0);
         }
         
-        private static bool ConsoleCtrlCheck(CtrlTypes ctrlType)
-        {
-            Console.WriteLine("Shutting Down Server");
-            switch (ctrlType)
-            {
-                case CtrlTypes.CTRL_C_EVENT:
-                    try
-                    {
-                        Environment.Exit(0);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                    break;
-
-                case CtrlTypes.CTRL_BREAK_EVENT:
-                    Console.WriteLine("CTRL+BREAK received!");
-                    break;
-
-                case CtrlTypes.CTRL_CLOSE_EVENT:
-                    Console.WriteLine("Program being closed!");
-                    try
-                    {
-                        Environment.Exit(0);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-
-                    break;
-
-                case CtrlTypes.CTRL_LOGOFF_EVENT:
-                case CtrlTypes.CTRL_SHUTDOWN_EVENT:
-                    Console.WriteLine("User is logging off!");
-                    break;
-            }
-            return true;
-        }
     }
 }

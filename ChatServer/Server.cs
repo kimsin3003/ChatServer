@@ -18,16 +18,16 @@ namespace ChatServer
         private string backEndIp;
         private int backEndPort;
         private Session backEndSession;
-        private int port;
+        private int listeningPort;
 
-        public Server(int port, string backEndIp, int backEndPort, int maxClientNum)
+        public Server(int listeningPort, string backEndIp, int backEndPort, int maxClientNum)
         {
-            this.port = port;
-            ipEndPoint = new IPEndPoint(IPAddress.Any, port);
+            this.listeningPort = listeningPort;
+            ipEndPoint = new IPEndPoint(IPAddress.Any, listeningPort);
             listenSock = null;
             backEndSession = null;
             this.maxClientNum = maxClientNum;
-            SessionManager.GetInstance().Init(maxClientNum, port);
+            SessionManager.GetInstance().Init(maxClientNum, listeningPort);
             fbSessionProcessor = new FBSessionProcessor();
             cfSessionProcessor = new CFSessionProcessor();
 
@@ -123,7 +123,7 @@ namespace ChatServer
 
         public void Start()
         {
-            Console.WriteLine("Start Server. port: " + port);
+            Console.WriteLine("Start Server. port: " + listeningPort);
             ConnectToBackEnd();
             StartListen();
             acceptingThread = new Thread(new ThreadStart(AcceptingProcess));

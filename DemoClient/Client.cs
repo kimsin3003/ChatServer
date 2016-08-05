@@ -22,8 +22,7 @@ namespace DemoClient
                 Console.WriteLine(el.ToString());
             m_ipEndPoint = new IPEndPoint(m_ipAddr, port);
         }
-
-        /**make me XML**/
+        
         public bool Connect()
         {
             m_sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

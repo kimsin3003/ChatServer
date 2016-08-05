@@ -50,7 +50,7 @@ namespace ChatServer
             try
             {
 
-                if (clientSession.Socket.Available == 0)
+                if (clientSession.Socket.Available == 0) // FIN has come.
                 {
                     if (clientSession.IsLogedIn())
                     {

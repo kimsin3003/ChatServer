@@ -148,7 +148,7 @@ namespace ChatServer
 
             try
             {
-                Socket.Select(sockets, null, null, 1000000);
+                Socket.Select(sockets, null, null, 1000000); // wait until something comes..
             }
             catch (SocketException)
             {

@@ -40,7 +40,7 @@ namespace ChatServer
             byte[] body;
             int bodyLength;
 
-            if (socket.Available == 0)
+            if (socket.Available == 0) // FIN has come.
             {
                 backEndSession.isConnected = false;
                 return false;
