@@ -38,7 +38,7 @@ namespace ChatServer
             {
                 input = Console.ReadKey(false);
                 
-            } while ((input.Key & ConsoleKey.Escape) != 0);
+            } while (input.Key != ConsoleKey.Escape);
 
             Environment.Exit(0);
         }
