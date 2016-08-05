@@ -33,10 +33,14 @@ namespace ChatServer
 
         private static void ExitInput()
         {
-            ConsoleKeyInfo input = Console.ReadKey(false);
+            ConsoleKeyInfo input;
+            do
+            {
+                input = Console.ReadKey(false);
+                
+            } while ((input.Key & ConsoleKey.Escape) != 0);
 
-            if ((input.Key & ConsoleKey.Escape) != 0)
-                Environment.Exit(0);
+            Environment.Exit(0);
         }
         
     }
