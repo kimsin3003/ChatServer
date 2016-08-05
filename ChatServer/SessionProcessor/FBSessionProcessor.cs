@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -325,6 +326,8 @@ namespace ChatServer
                         {
                             Console.WriteLine("Room Join Success");
                             int roomNo = BitConverter.ToInt32(body, 0);
+                            CFRoomRequestBody rb = (CFRoomRequestBody)Serializer.ByteToStructure(body, typeof(CFRoomRequestBody));
+                            SendBroadCast(CFMessageType.Room_Join, clientSession.Id, rb.roomNo, null);
                             RoomManager.GetInstance().AddUserInRoom(clientSession, roomNo);
                         }
                         else if (header.state == FBMessageState.Fail)
@@ -375,6 +378,45 @@ namespace ChatServer
                 return;
             
             SendData(clientSession, body);
+        }
+
+        private void SendBroadCast(CFMessageType type, char[] id, int roomNo, byte[] message)
+        {
+            List<Session> users = RoomManager.GetInstance().GetUsersInRoom(roomNo);
+            CFHeader header = new CFHeader();
+            header.type = type;
+            header.state = CFMessageState.Request;
+
+            CFChatResponseBody body = new CFChatResponseBody();
+            body.date = DateTime.Now;
+            body.id = id;
+
+            if (type == CFMessageType.Chat_MSG_Broadcast)
+            {
+                body.msgLen = message.Length;
+            }
+            else
+            {
+                body.msgLen = 0;
+            }
+
+            byte[] bodyByte = Serializer.StructureToByte(body);
+
+            header.length = bodyByte.Length;
+
+
+            byte[] headerByte = Serializer.StructureToByte(header);
+
+
+
+            foreach (var user in users)
+            {
+                SendData(user, headerByte);
+                SendData(user, bodyByte);
+
+                if (body.msgLen > 0)
+                    SendData(user, message);
+            }
         }
 
     }

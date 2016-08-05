@@ -260,8 +260,6 @@ namespace ChatServer
                 case CFMessageType.Room_Join:
                     {
                         Console.WriteLine("Room Join Request " + "room no:" + requestFromClient.roomNo);
-//                         CFRoomRequestBody rb = (CFRoomRequestBody)Serializer.ByteToStructure(body, typeof(CFRoomRequestBody));
-//                         SendBroadCast(CFMessageType.Room_Join, clientSession.Id, rb.roomNo, null);
                         requestHeader.type = FBMessageType.Room_Join;
                         break;
                     }

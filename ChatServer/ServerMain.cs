@@ -47,10 +47,18 @@ namespace ChatServer
         
         private static bool ConsoleCtrlCheck(CtrlTypes ctrlType)
         {
+            Console.WriteLine("Shutting Down Server");
             switch (ctrlType)
             {
                 case CtrlTypes.CTRL_C_EVENT:
-                    Environment.Exit(0);
+                    try
+                    {
+                        Environment.Exit(0);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                     break;
 
                 case CtrlTypes.CTRL_BREAK_EVENT:
@@ -59,7 +67,15 @@ namespace ChatServer
 
                 case CtrlTypes.CTRL_CLOSE_EVENT:
                     Console.WriteLine("Program being closed!");
-                    Environment.Exit(0);
+                    try
+                    {
+                        Environment.Exit(0);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+
                     break;
 
                 case CtrlTypes.CTRL_LOGOFF_EVENT:
