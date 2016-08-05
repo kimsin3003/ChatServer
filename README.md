@@ -9,7 +9,7 @@
 
 ##사용 환경
 .Net FrameWork 4.5.2 이상.  
-Visual Studio 2015,
+Visual Studio 2015.  
 따로 사용한 라이브러리는 없습니다.
 
 ##기능
