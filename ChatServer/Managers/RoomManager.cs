@@ -39,13 +39,31 @@ namespace ChatServer
             return instance;
         }
 
-        
-        public int MakeNewRoom(int roomNo)
+        public void Reset()
         {
-            rooms.Add(roomNo, new Room(roomNo));
-            Console.WriteLine("Room " + roomNo + " is made");
+            rooms.Clear();
+            Console.WriteLine("Rooms Reset");
+            Console.WriteLine("Left Rooms: " + rooms.Count);
+        }
 
-            return roomNo;
+        
+        public void MakeNewRoom(int roomNo)
+        {
+            try
+            {
+                rooms.Add(roomNo, new Room(roomNo));
+            }
+            catch(ArgumentException)
+            {
+                Console.WriteLine("Room " + roomNo + "already exists.");
+                return;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Room " + roomNo + "already exists.");
+                return;
+            }
+            Console.WriteLine("Room " + roomNo + " is made");
         }
 
         public void RemoveRoom(int roomNo)

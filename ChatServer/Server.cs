@@ -82,8 +82,15 @@ namespace ChatServer
                     return;
                 }
 
-                backEndSession = SessionManager.GetInstance().MakeNewSession(backEndSock);
+                Console.WriteLine("Making BackEndSession");
 
+                if ((backEndSession = SessionManager.GetInstance().MakeNewSession(backEndSock)) == null)
+                {
+                    SessionManager.GetInstance().Reset();
+                    RoomManager.GetInstance().Reset();
+                    backEndSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    continue;
+                }
                 Console.WriteLine("Connected to BackEnd server");
                 return;
             }
@@ -134,10 +141,14 @@ namespace ChatServer
             {
                 if (listenSock == null)
                     return;
-                if (listenSock.Poll(10, SelectMode.SelectRead))
+                if (listenSock.Poll(1000, SelectMode.SelectRead))
                 {
                     Socket newClient = listenSock.Accept();
                     Session session = SessionManager.GetInstance().MakeNewSession(newClient);
+                    if (session == null)
+                    {
+                        continue;
+                    }
                     Console.WriteLine("Client(" + session.sessionId + ", " + session.Ip + ")" + " is Connected");
                 }
             }
@@ -154,13 +165,15 @@ namespace ChatServer
             List<Session> timedoutSessions = SessionManager.GetInstance().GetTimedoutSessions();
             foreach (Session session in timedoutSessions)
             {
-                if (session.Socket == backEndSession.Socket)
+                if (session.Socket == backEndSession?.Socket)
                 {
                     fbSessionProcessor.ProcessTimeoutSession(session);
 
                     if (!session.isConnected)
                     {
                         Console.WriteLine("Backend Server is down");
+                        SessionManager.GetInstance().Reset();
+                        RoomManager.GetInstance().Reset();
                         ConnectToBackEnd();
                     }
                 }
@@ -184,6 +197,8 @@ namespace ChatServer
                     if (!session.isConnected)
                     {
                         Console.WriteLine("Backend Server is down");
+                        SessionManager.GetInstance().Reset();
+                        RoomManager.GetInstance().Reset();
                         ConnectToBackEnd();
                     }
                 }

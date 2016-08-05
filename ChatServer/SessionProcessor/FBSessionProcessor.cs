@@ -22,7 +22,7 @@ namespace ChatServer
                 byte[] headerByte = Serializer.StructureToByte(header);
                 SendData(backEndSession, headerByte);
                 backEndSession.healthCheckCount = 0;
-                backEndSession.ResetTimer();
+                backEndSession.ResetStartTime();
             }
             else
             {
@@ -90,7 +90,7 @@ namespace ChatServer
                     break;
 
                 case FBMessageType.Health_Check:
-                    backEndSession.ResetTimer();
+                    backEndSession.ResetStartTime();
                     backEndSession.isHealthCheckSent = false;
                     backEndSession.healthCheckCount = 0;
                     break;
@@ -122,7 +122,7 @@ namespace ChatServer
             }
             else
             {
-                backEndSession.ResetTimer();
+                backEndSession.ResetStartTime();
                 return;
             }
         }
@@ -191,11 +191,7 @@ namespace ChatServer
         private void LoginMessage(FBHeader header, byte[] body)
         {
             Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
-            if(clientSession == null)
-            {
-                Console.WriteLine("Already Logged Out");
-                return;
-            }
+            
             CFHeader responseHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)
@@ -230,11 +226,23 @@ namespace ChatServer
                             clientSession.LogIn(responseFromBackEnd.id);
                             Console.WriteLine(new string(responseFromBackEnd.id) + " is logged in");
                         }
+                        else if(header.state == FBMessageState.Fail)
+                        {
+                            Console.WriteLine("Login Fail");
+                        }
                         responseHeader.type = CFMessageType.Login;
                         break;
                     }
                 case FBMessageType.LogOut:
                     {
+                        if (clientSession == null)
+                        {
+                            if (header.type == FBMessageType.LogOut)
+                                return;
+
+                            Console.WriteLine("Already Logged Out");
+                            return;
+                        }
                         if (header.state == FBMessageState.Success)
                         {
                             Console.WriteLine(new string(clientSession.Id) + " is logged out");
@@ -264,6 +272,12 @@ namespace ChatServer
         private void RoomMessage(FBHeader header, byte[] body)
         {
             Session clientSession = SessionManager.GetInstance().GetSession(header.sessionId);
+
+            if(header.type != FBMessageType.Room_Delete)
+            {
+                if (clientSession == null)
+                    return;
+            }
             CFHeader requestHeader = new CFHeader();
 
             if (header.state == FBMessageState.Success)
@@ -299,6 +313,8 @@ namespace ChatServer
                             Console.WriteLine("Room Delete Success");
                             int roomNo = BitConverter.ToInt32(body, 0);
                             RoomManager.GetInstance().RemoveRoom(roomNo);
+
+                            return; // no user to send response.
                         }
                         requestHeader.type = CFMessageType.Room_Delete;
                         break;
@@ -340,6 +356,7 @@ namespace ChatServer
                     return;
 
             }
+
 
             if (body == null)
             {

@@ -39,7 +39,7 @@ namespace ChatServer
             get { return lastStartTime; }
         }
 
-        public void ResetTimer()
+        public void ResetStartTime()
         {
             lastStartTime = DateTime.Now;
         }

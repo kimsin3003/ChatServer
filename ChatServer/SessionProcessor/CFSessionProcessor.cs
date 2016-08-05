@@ -20,7 +20,7 @@ namespace ChatServer
 
                 byte[] headerByte = Serializer.StructureToByte(header);
                 SendData(clientSession, headerByte);
-                clientSession.ResetTimer();
+                clientSession.ResetStartTime();
                 clientSession.isHealthCheckSent = true;
             }
             else
@@ -54,7 +54,7 @@ namespace ChatServer
                 {
                     if (clientSession.IsLogedIn())
                     {
-                        Console.WriteLine(clientSession.Id + " has unexpectedly exited.");
+                        Console.WriteLine(new string(clientSession.Id) + " has unexpectedly exited.");
                         if(clientSession.IsInRoom())
                         {
                             RoomManager.GetInstance().RemoveUserInRoom(clientSession);
@@ -119,26 +119,33 @@ namespace ChatServer
                 case CFMessageType.Signup:
                     SignUpMessage(clientSession, backEndSession, header, body);
                     break;
+
                 case CFMessageType.Id_Dup:
                 case CFMessageType.Login:
                 case CFMessageType.LogOut:
                     LoginMessage(clientSession, backEndSession, header, body);
                     break;
+
                 case CFMessageType.Room_Create:
                 case CFMessageType.Room_Join:
                 case CFMessageType.Room_Leave:
                 case CFMessageType.Room_List:
                     RoomMessage(clientSession, backEndSession, header, body);
                     break;
+
                 case CFMessageType.Chat_MSG_From_Client:
                 case CFMessageType.Chat_MSG_Broadcast:
                     ChatMassage(clientSession, backEndSession, header, body);
                     break;
+
                 case CFMessageType.Health_Check:
-                    clientSession.ResetTimer();
-                    clientSession.healthCheckCount = 0;
-                    clientSession.isHealthCheckSent = false;
-                    break;
+                    {
+                        clientSession.ResetStartTime();
+                        clientSession.healthCheckCount = 0;
+                        clientSession.isHealthCheckSent = false;
+                        break;
+                    }
+
                 default:
                     Console.WriteLine("Undefined Message Type");
                     break;
@@ -253,15 +260,15 @@ namespace ChatServer
                 case CFMessageType.Room_Join:
                     {
                         Console.WriteLine("Room Join Request " + "room no:" + requestFromClient.roomNo);
+//                         CFRoomRequestBody rb = (CFRoomRequestBody)Serializer.ByteToStructure(body, typeof(CFRoomRequestBody));
+//                         SendBroadCast(CFMessageType.Room_Join, clientSession.Id, rb.roomNo, null);
                         requestHeader.type = FBMessageType.Room_Join;
                         break;
                     }
                 case CFMessageType.Room_Leave:
                     {
                         Console.WriteLine("Room Leave Request");
-                        string msg = clientSession.Id + " has left.";
-                        byte[] roomLeaveBroadcast = Serializer.StringToBytes(msg);
-                        SendBroadCast(clientSession.Id, clientSession.roomNo, roomLeaveBroadcast);
+                        SendBroadCast(CFMessageType.Room_Leave, clientSession.Id, clientSession.roomNo, null);
                         requestHeader.type = FBMessageType.Room_Leave;
                         break;
                     }
@@ -316,7 +323,7 @@ namespace ChatServer
                         if (body != null)
                         {
                             Console.WriteLine("Broadcasting");
-                            SendBroadCast(clientSession.Id, clientSession.roomNo, body);
+                            SendBroadCast(CFMessageType.Chat_MSG_Broadcast, clientSession.Id, clientSession.roomNo, body);
                         }
                         requestHeader.type = FBMessageType.Chat_Count;
                         break;
@@ -332,8 +339,9 @@ namespace ChatServer
             
             FBChatRequestBody requestBody = new FBChatRequestBody();
 
-            byte[] bodyByte = Serializer.StructureToByte(requestBody);
             requestBody.id = clientSession.Id;
+
+            byte[] bodyByte = Serializer.StructureToByte(requestBody);
             requestHeader.length = bodyByte.Length;
             
             byte[] headerByte = Serializer.StructureToByte(requestHeader);
@@ -342,17 +350,25 @@ namespace ChatServer
             SendData(backEndSession, bodyByte);
         }
 
-        private void SendBroadCast(char[] id, int roomNo, byte[] message)
+        private void SendBroadCast(CFMessageType type, char[] id, int roomNo, byte[] message)
         {
             List<Session> users = RoomManager.GetInstance().GetUsersInRoom(roomNo);
             CFHeader header = new CFHeader();
-            header.type = CFMessageType.Chat_MSG_Broadcast;
+            header.type = type;
             header.state = CFMessageState.Request;
 
             CFChatResponseBody body = new CFChatResponseBody();
             body.date = DateTime.Now;
             body.id = id;
-            body.msgLen = message.Length;
+
+            if(type == CFMessageType.Chat_MSG_Broadcast)
+            {
+                body.msgLen = message.Length;
+            }
+            else
+            {
+                body.msgLen = 0;
+            }
 
             byte[] bodyByte = Serializer.StructureToByte(body);
 
@@ -367,7 +383,9 @@ namespace ChatServer
             {
                 SendData(user, headerByte);
                 SendData(user, bodyByte);
-                SendData(user, message);
+
+                if(body.msgLen > 0)
+                    SendData(user, message);
             }
         }
     }

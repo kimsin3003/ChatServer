@@ -12,6 +12,7 @@ namespace ChatServer
         private Queue<int> idCount;
         static private SessionManager instance = null;
         private int servicePort;
+        private int maxSessionNum;
 
 
         private SessionManager()
@@ -27,11 +28,44 @@ namespace ChatServer
         {
             sessionPool = new Queue<Session>(maxSessionNum);
             servicePort = port;
+            this.maxSessionNum = maxSessionNum;
 
             //set session pool
             for (int i = 0; i < maxSessionNum; i++)
             {
                 sessionPool.Enqueue(new Session());
+            }
+        }
+
+        public void Reset()
+        {
+            lock(connectedSessions)
+            {
+                lock(sessionPool)
+                {
+                    lock(idCount)
+                    {
+                        List<Session> sessionToRemove = new List<Session>();
+
+                        foreach (KeyValuePair<int, Session> item in connectedSessions)
+                        {
+                            Session session = item.Value;
+                            sessionToRemove.Add(session);
+                        }
+
+                        foreach (Session session in sessionToRemove)
+                        {
+                            RemoveSession(session);
+                        }
+
+                        idCount = new Queue<int>();
+                        idCount.Enqueue(0);
+
+                        Console.WriteLine("Session Reset");
+                        Console.WriteLine("Left Sessions: " + sessionPool.Count);
+                    }
+
+                }
             }
         }
 
@@ -54,7 +88,6 @@ namespace ChatServer
         {
             if (!connectedSessions.ContainsKey(sessionId))
             {
-                Console.WriteLine("sessionId " + sessionId + " doesn't exist");
                 return null;
             }
 
@@ -84,7 +117,7 @@ namespace ChatServer
                         else
                         {
                             session.healthCheckCount++;
-                            session.ResetTimer();
+                            session.ResetStartTime();
                         }
                     }
                 }
@@ -171,11 +204,20 @@ namespace ChatServer
 
         public Session MakeNewSession(Socket socket)
         {
-            Session newSession = sessionPool.Dequeue();
+            Session newSession = null;
+            lock(connectedSessions)
+            {
+                lock (sessionPool)
+                {
+                    if(sessionPool.Count > 0)
+                        newSession = sessionPool.Dequeue();
+                }
+            }
 
             if(newSession == null)
             {
                 Console.WriteLine("Session pool is empty!");
+                return null;
             }
 
             newSession.Init(socket);
@@ -186,7 +228,10 @@ namespace ChatServer
 
                 if (!connectedSessions.ContainsKey(sessionId + 1) && !idCount.Contains(sessionId + 1))
                 {
-                    idCount.Enqueue(sessionId + 1);
+                    lock(idCount)
+                    {
+                        idCount.Enqueue(sessionId + 1);
+                    }
                 }
 
                 newSession.sessionId = sessionId;
@@ -203,7 +248,7 @@ namespace ChatServer
         {
             lock(connectedSessions)
             {
-                if(connectedSessions.ContainsKey(session.sessionId))
+                if(session != null && connectedSessions.ContainsKey(session.sessionId))
                 {
                     Console.WriteLine(new string(session.Id) +"(" + session.sessionId + ", " + session.Ip + ") has exit");
 
@@ -211,11 +256,13 @@ namespace ChatServer
 
                     idCount.Enqueue(session.sessionId);
                     session.sessionId = -1;
+                    session.Socket.Shutdown(SocketShutdown.Both);
+                    session.Socket.Close();
                     sessionPool.Enqueue(session);
                 }
                 else
                 {
-                    Console.WriteLine("session " + session.sessionId + " doesn't exist");
+                    Console.WriteLine("session " + session?.sessionId + " doesn't exist");
                 }
             }
         }

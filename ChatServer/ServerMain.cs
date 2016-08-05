@@ -22,7 +22,7 @@ namespace ChatServer
 
         static void Main(string[] args)
         {
-            Console.Title = "Chat Server";
+            Console.Title = "Chat Server " + Int32.Parse(args[0]);
             Console.ForegroundColor = ConsoleColor.Green;
             if (args.Length == 1 && args[0] == "-help")
             {
