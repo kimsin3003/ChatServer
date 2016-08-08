@@ -108,7 +108,7 @@ namespace ChatServer
                 Session session = item.Value;
                 if (session.isHealthCheckSent)
                 {
-                    if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 5)
+                    if ((DateTime.Now - session.lastStartTime).TotalSeconds >= 5)
                     {
                         if (session.healthCheckCount > 3)
                         {
@@ -123,7 +123,7 @@ namespace ChatServer
                 }
                 else
                 {
-                    if ((DateTime.Now - session.LastStartTime).TotalSeconds >= 30)
+                    if ((DateTime.Now - session.lastStartTime).TotalSeconds >= 30)
                     {
                         session.healthCheckCount++;
                         timedOutSessions.Add(session);
@@ -142,7 +142,7 @@ namespace ChatServer
             {
                 foreach (KeyValuePair<int, Session> item in connectedSessions)
                 {
-                    sockets.Add(item.Value.Socket);
+                    sockets.Add(item.Value.socket);
                 }
             }
 
@@ -166,7 +166,7 @@ namespace ChatServer
                     foreach (KeyValuePair<int, Session> item in connectedSessions)
                     {
                         Session session = item.Value;
-                        Socket socket = session.Socket;
+                        Socket socket = session.socket;
 
                         if (socket.Poll(10, SelectMode.SelectRead))
                         {
@@ -250,14 +250,14 @@ namespace ChatServer
             {
                 if(session != null && connectedSessions.ContainsKey(session.sessionId))
                 {
-                    Console.WriteLine(new string(session.Id) +"(" + session.sessionId + ", " + session.Ip + ") has exit");
+                    Console.WriteLine(new string(session.id) +"(" + session.sessionId + ", " + session.ip + ") has exit");
 
                     connectedSessions.Remove(session.sessionId);
 
                     idCount.Enqueue(session.sessionId);
                     session.sessionId = -1;
-                    session.Socket.Shutdown(SocketShutdown.Both);
-                    session.Socket.Close();
+                    session.socket.Shutdown(SocketShutdown.Both);
+                    session.socket.Close();
                     sessionPool.Enqueue(session);
                 }
                 else

@@ -149,7 +149,7 @@ namespace ChatServer
                     {
                         continue;
                     }
-                    Console.WriteLine("Client(" + session.sessionId + ", " + session.Ip + ")" + " is Connected");
+                    Console.WriteLine("Client(" + session.sessionId + ", " + session.ip + ")" + " is Connected");
                 }
             }
         }
@@ -165,7 +165,7 @@ namespace ChatServer
             List<Session> timedoutSessions = SessionManager.GetInstance().GetTimedoutSessions();
             foreach (Session session in timedoutSessions)
             {
-                if (session.Socket == backEndSession?.Socket)
+                if (session.socket == backEndSession?.socket)
                 {
                     fbSessionProcessor.ProcessTimeoutSession(session);
 
@@ -190,7 +190,7 @@ namespace ChatServer
             List<Session> readableSessions = SessionManager.GetInstance().GetReadableSessions();
             foreach (Session session in readableSessions)
             {
-                if (session.Socket == backEndSession.Socket)
+                if (session.socket == backEndSession.socket)
                 {
                     fbSessionProcessor.ProcessReadableSession(session);
 

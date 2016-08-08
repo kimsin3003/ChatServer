@@ -7,37 +7,35 @@ namespace ChatServer
 
     class Session
     {
-        private Socket socket;
-        private IPAddress ip;
+        public Socket socket
+        {
+            get;
+            private set;
+        }
+        public IPAddress ip
+        {
+            get;
+            private set;
+        }
 
 
-        private char[] id;
+        public char[] id
+        {
+            get;
+            private set;
+        }
+        public DateTime lastStartTime
+        {
+            get;
+            private set;
+        }
         public int sessionId;
         public int roomNo;
         public bool isConnected;
-        private DateTime lastStartTime;
+        
         public bool isHealthCheckSent;
         public int healthCheckCount;
-
-        public char[] Id
-        {
-            get { return id; }
-        }
-
-        public IPAddress Ip
-        {
-            get { return ip; }
-        }
-
-        public Socket Socket
-        {
-            get { return socket; }
-        }
-
-        public DateTime LastStartTime
-        {
-            get { return lastStartTime; }
-        }
+        
 
         public void ResetStartTime()
         {

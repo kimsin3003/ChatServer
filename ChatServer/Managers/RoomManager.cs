@@ -91,7 +91,7 @@ namespace ChatServer
 
         public void AddUserInRoom(Session userSession, int roomNo)
         {
-            Console.WriteLine(new string(userSession.Id) + " entered the room " + roomNo);
+            Console.WriteLine(new string(userSession.id) + " entered the room " + roomNo);
             rooms[roomNo].chatters.Add(userSession);
             userSession.roomNo = roomNo;
         }
@@ -99,7 +99,7 @@ namespace ChatServer
 
         public void RemoveUserInRoom(Session userSession)
         {
-            Console.WriteLine(new string(userSession.Id) + " went out the room " + userSession.roomNo);
+            Console.WriteLine(new string(userSession.id) + " went out the room " + userSession.roomNo);
             rooms[userSession.roomNo].chatters.Remove(userSession);
             userSession.roomNo = -1;
         }

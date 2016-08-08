@@ -32,8 +32,8 @@ namespace ChatServer
         }
         public bool ProcessReadableSession(Session backEndSession)
         {
-            Socket socket = backEndSession.Socket;
-            IPAddress ipAddress = backEndSession.Ip;
+            Socket socket = backEndSession.socket;
+            IPAddress ipAddress = backEndSession.ip;
 
             FBHeader header;
             byte[] headerByte;
@@ -155,9 +155,9 @@ namespace ChatServer
             header.sessionId = -1;
 
             byte[] headerByte = Serializer.StructureToByte(header);
-            backEndSession.Socket.Send(headerByte);
+            backEndSession.socket.Send(headerByte);
 
-            backEndSession.Socket.Send(body);
+            backEndSession.socket.Send(body);
         }
 
         private void SignupMessage(FBHeader header, byte[] body)
@@ -246,7 +246,7 @@ namespace ChatServer
                         }
                         if (header.state == FBMessageState.Success)
                         {
-                            Console.WriteLine(new string(clientSession.Id) + " is logged out");
+                            Console.WriteLine(new string(clientSession.id) + " is logged out");
                             clientSession.LogOut();
                             if(clientSession.IsInRoom())
                             {
@@ -327,7 +327,7 @@ namespace ChatServer
                             Console.WriteLine("Room Join Success");
                             int roomNo = BitConverter.ToInt32(body, 0);
                             CFRoomRequestBody rb = (CFRoomRequestBody)Serializer.ByteToStructure(body, typeof(CFRoomRequestBody));
-                            SendBroadCast(CFMessageType.Room_Join, clientSession.Id, rb.roomNo, null);
+                            SendBroadCast(CFMessageType.Room_Join, clientSession.id, rb.roomNo, null);
                             RoomManager.GetInstance().AddUserInRoom(clientSession, roomNo);
                         }
                         else if (header.state == FBMessageState.Fail)

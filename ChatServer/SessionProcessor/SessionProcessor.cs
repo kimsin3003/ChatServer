@@ -17,7 +17,7 @@ namespace ChatServer
             buf = new byte[size];
             try
             {
-                session.Socket.Receive(buf);
+                session.socket.Receive(buf);
             }
             catch (SocketException)
             {
@@ -35,7 +35,7 @@ namespace ChatServer
         {
             try
             {
-                session.Socket.Send(buf);
+                session.socket.Send(buf);
             }
             catch (SocketException)
             {
